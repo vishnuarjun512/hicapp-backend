@@ -45,14 +45,20 @@ export const createPostService = async (
   userid,
   content,
   visbility = "public",
+  location,
 ) => {
   try {
-    const query = `INSERT INTO posts (user_id, body, visibility)
-               VALUES($1, $2, $3)
-               RETURNING id, user_id, body, visibility;
+    const query = `INSERT INTO posts (user_id, body, visibility, location)
+               VALUES($1, $2, $3, $4)
+               RETURNING id, user_id, body, visibility, location
         `;
 
-    const post = await pool.query(query, [userid, content, visbility]);
+    const post = await pool.query(query, [
+      userid,
+      content,
+      visbility,
+      location,
+    ]);
     return post.rows[0];
   } catch (error) {
     console.log("CREATE POST SERVICE ERROR - ", error);

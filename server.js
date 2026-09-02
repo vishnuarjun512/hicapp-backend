@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import http from "http";
 import pool from "./config/db.js";
 import { userRoutes } from "./routes/user.route.js";
+import { postRoutes } from "./routes/post.route.js";
 
 dotenv.config();
 const PORT = process.env.PORT;
@@ -23,9 +24,15 @@ const server = http.createServer((req, res) => {
 
   res.setHeader("Content-Type", "application/json");
 
-  const handled = userRoutes(req, res);
+  const userRouteshandled = userRoutes(req, res);
 
-  if (handled) {
+  if (userRouteshandled) {
+    return;
+  }
+
+  const postRoutesHandled = postRoutes(req, res);
+
+  if (postRoutesHandled) {
     return;
   }
 

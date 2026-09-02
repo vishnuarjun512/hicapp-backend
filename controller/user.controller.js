@@ -1,9 +1,13 @@
-import { createUserService, getUsers } from "../services/user.service.js";
+import {
+  createUserService,
+  getUserByEmail,
+  getUsersService,
+} from "../services/user.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 
 export const getUsersController = async (req, res) => {
   try {
-    const users = await getUsers();
+    const users = await getUsersService();
 
     res.statusCode = 200;
 
@@ -25,7 +29,7 @@ export const getUsersController = async (req, res) => {
   }
 };
 
-export const createUser = async (req, res) => {
+export const registerUser = async (req, res) => {
   try {
     const data = await BodyReader(req);
 
@@ -38,8 +42,59 @@ export const createUser = async (req, res) => {
         }),
       );
     });
+
+    return;
   } catch (error) {
     console.log("CREATE USER ERROR - ", error);
+    res.statusCode = 500;
+    res.end(
+      JSON.stringify({
+        message: "Internal Server Erorr",
+      }),
+    );
+  }
+};
+
+export const signInUser = async (req, res) => {
+  try {
+    const data = await BodyReader(req);
+    const { email, password } = data;
+
+    const user = await getUserByEmail(email);
+    console.log(user);
+    if (user) {
+      if (password == user.password) {
+        console.log(user.email, " has logged in");
+
+        res.statusCode = 200;
+        res.end(
+          JSON.stringify({
+            message: "Sign In Success",
+            user,
+          }),
+        );
+
+        return;
+      }
+
+      console.log("Credentials Dont Match");
+      res.statusCode = 400;
+      res.end(
+        JSON.stringify({
+          message: "Credentials Dont Match",
+        }),
+      );
+      return;
+    }
+
+    res.statusCode = 404;
+    res.end(
+      JSON.stringify({
+        message: "User does not exist",
+      }),
+    );
+  } catch (error) {
+    console.log("LOGIN ERROR - ", error);
     res.statusCode = 500;
     res.end(
       JSON.stringify({

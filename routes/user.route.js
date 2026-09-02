@@ -1,6 +1,7 @@
 import {
   getUsersController,
-  createUser,
+  registerUser,
+  signInUser,
 } from "../controller/user.controller.js";
 
 export function userRoutes(req, res) {
@@ -10,7 +11,12 @@ export function userRoutes(req, res) {
   }
 
   if (req.method === "POST" && req.url === "/api/auth/register") {
-    createUser(req, res);
+    registerUser(req, res);
+    return true;
+  }
+
+  if (req.method === "POST" && req.url === "/api/auth/login") {
+    signInUser(req, res);
     return true;
   }
 

@@ -1,14 +1,13 @@
 import pool from "../config/db.js";
 
-
 export async function createUserService(name, email, password) {
   const result = await pool.query(
     `
-      INSERT INTO users (name, email, password)
-      VALUES ($1, $2, $3)
+      INSERT INTO users (email, password)
+      VALUES ($1, $2)
       RETURNING id, name, email, created_at
     `,
-    [name, email, password],
+    [email, password],
   );
 
   return result.rows[0];
@@ -24,6 +23,13 @@ export async function getUsersService() {
   return result.rows;
 }
 
+export const getUserByEmail = async (email) => {
+  const query = `SELECT FROM users WHERE email=$1`;
+  const result = await pool.query(query, [email]);
+
+  return result.rows[0];
+};
+
 export async function deleteUserByNameService(name) {
   const result = await pool.query(
     `
@@ -37,9 +43,7 @@ export async function deleteUserByNameService(name) {
   return result.rows[0];
 }
 
-
-
-export const createUsersTable = async() =>  {
+export const createUsersTable = async () => {
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -55,7 +59,7 @@ export const createUsersTable = async() =>  {
   } catch (error) {
     console.error("❌ Failed to create users table:", error);
   }
-}
+};
 
 export async function deleteUsersTable() {
   await pool.query(`

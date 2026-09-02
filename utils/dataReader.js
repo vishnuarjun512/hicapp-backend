@@ -1,10 +1,10 @@
-export const BodyReader = async(req) => {
-    let body = "";
+export const BodyReader = async (req) => {
+  let body = "";
 
-    for await (const chunk of req) {
-      body += chunk;
-    }
+  for await (const chunk of req) {
+    body += chunk;
+  }
 
-    const data = JSON.parse(body);
-    return data;
-}
+  const data = JSON.parse(body);
+  return data;
+};

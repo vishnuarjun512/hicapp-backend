@@ -67,13 +67,16 @@ export const registerUser = async (req, res) => {
     const data = await BodyReader(req);
 
     const { email, password } = data;
+
     createUserService(email, password).then((data) => {
+      res.statusCode = 200;
       res.end(
         JSON.stringify({
           message: "Created User Successfulluy",
           user: data,
         }),
       );
+      return;
     });
 
     return;

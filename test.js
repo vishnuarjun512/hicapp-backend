@@ -1,12 +1,15 @@
 import readline from "readline";
 import pool from "./config/db.js";
 import {
-  createUserService,
-  createUsersTable,
-  deleteUserByEmail,
-  deleteUsersTable,
-  getUsersService,
+  createUsersTableService,
+  deleteUsersTableService,
+  getAllUsersService,
 } from "./services/user.service.js";
+import {
+  createPostService,
+  createPostTableService,
+  getAllPostService,
+} from "./services/post.service.js";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -27,11 +30,12 @@ async function main() {
 =============================
 
 1. Create users table
-2. Create user
-3. List users
-4. Delete user by name
-5. Delete users table
-6. Exit
+2. List users
+3. Delete users table
+4. Create posts table
+5. Create post
+6. Get all posts
+7. Exit
 
 =============================
 `);
@@ -44,30 +48,15 @@ async function main() {
         // CREATE TABLE
         // --------------------------------
         case "1":
-          await createUsersTable();
+          await createUsersTableService();
           console.log("✅ Users table is ready.");
           break;
 
         // --------------------------------
-        // CREATE USER
-        // --------------------------------
-        case "2": {
-          const name = await ask("Name: ");
-          const email = await ask("Email: ");
-          const password = await ask("Password: ");
-
-          const user = await createUserService(name, email, password);
-
-          console.log("\n✅ User created:");
-          console.log(user);
-          break;
-        }
-
-        // --------------------------------
         // LIST USERS
         // --------------------------------
-        case "3": {
-          const users = await getUsersService();
+        case "2": {
+          const users = await getAllUsersService();
 
           console.log("\nUsers:");
 
@@ -81,55 +70,60 @@ async function main() {
         }
 
         // --------------------------------
-        // DELETE USER
-        // --------------------------------
-        case "4": {
-          const name = await ask("Enter user's name: ");
-
-          const confirm = await ask(
-            `Are you sure you want to delete "${name}"? (y/n): `,
-          );
-
-          if (confirm.toLowerCase() !== "y") {
-            console.log("❌ Delete cancelled.");
-            break;
-          }
-
-          const deletedUser = await deleteUserByEmail(name);
-
-          if (!deletedUser) {
-            console.log(`❌ No user found with name "${name}".`);
-          } else {
-            console.log("✅ User deleted:");
-            console.log(deletedUser);
-          }
-
-          break;
-        }
-
-        // --------------------------------
         // DELETE TABLE
         // --------------------------------
-        case "5": {
+        case "3": {
           console.log("\n⚠️ WARNING: This will delete the entire users table.");
 
-          const confirm = await ask('Type "DELETE USERS TABLE" to continue: ');
+          const confirm = await ask('Type "CONFIRM" to continue: ');
 
-          if (confirm !== "DELETE USERS TABLE") {
+          if (confirm !== "CONFIRM") {
             console.log("❌ Operation cancelled.");
             break;
           }
 
-          await deleteUsersTable();
+          await deleteUsersTableService();
 
           console.log("🗑️ Users table deleted.");
           break;
         }
 
         // --------------------------------
+        // CREATE POSTS TABLE
+        // --------------------------------
+        case "4": {
+          await createPostTableService().then(() => {
+            console.log("\n✅ Post Table created:");
+          });
+          break;
+        }
+
+        // --------------------------------
+        // CREATE POST
+        // --------------------------------
+        case "5": {
+          const userId = "a505e7b8-be9e-4cfc-9c68-20cb9ec27f88";
+          const content = await ask("Write post content: ");
+
+          const visibility = "public";
+
+          const post = await createPostService(userId, content, visibility);
+
+          console.log("\n✅ Post created:");
+          console.log(post);
+
+          break;
+        }
+
+        case "6":
+          const posts = await getAllPostService();
+          console.log(posts);
+          break;
+
+        // --------------------------------
         // EXIT
         // --------------------------------
-        case "6":
+        case "7":
           console.log("Goodbye!");
           rl.close();
           await pool.end();

@@ -1,16 +1,20 @@
 import pool from "../config/db.js";
 
 export async function createUserService(email, password) {
-  const result = await pool.query(
-    `
+  try {
+    const result = await pool.query(
+      `
       INSERT INTO users (email, password)
       VALUES ($1, $2)
       RETURNING id, name, email, created_at
     `,
-    [email, password],
-  );
+      [email, password],
+    );
 
-  return result.rows[0];
+    return result.rows[0];
+  } catch (error) {
+    throw new Error("CREATE USER SERVICE ERROR - ", error);
+  }
 }
 
 export async function getAllUsersService() {

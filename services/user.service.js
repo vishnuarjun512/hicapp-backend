@@ -23,11 +23,11 @@ export async function getUsersService() {
   return result.rows;
 }
 
-export const getUserByEmail = async (email) => {
+export const getUserByIdService = async (id) => {
   const query = `SELECT * 
   FROM users 
-  WHERE email=$1`;
-  const result = await pool.query(query, [email]);
+  WHERE id=$1`;
+  const result = await pool.query(query, [id]);
   return result.rows[0];
 };
 

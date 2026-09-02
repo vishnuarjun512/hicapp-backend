@@ -1,5 +1,6 @@
 import {
   editProfile,
+  getUserById,
   getUsersController,
   registerUser,
   signInUser,
@@ -25,6 +26,12 @@ export function userRoutes(req, res) {
     const id = req.url.split("/").pop();
 
     editProfile(req, res, id);
+    return true;
+  }
+
+  if (req.method === "GET" && req.url.startsWith("/api/user/")) {
+    const id = req.url.split("/").pop();
+    getUserById(req, res, id);
     return true;
   }
 

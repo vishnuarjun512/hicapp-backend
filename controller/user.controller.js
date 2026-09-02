@@ -1,7 +1,7 @@
 import {
   createUserService,
   editProfileService,
-  getUserByEmail,
+  getUserByIdService,
   getUsersService,
 } from "../services/user.service.js";
 import { BodyReader } from "../utils/dataReader.js";
@@ -22,6 +22,37 @@ export const getUsersController = async (req, res) => {
 
     res.statusCode = 500;
 
+    res.end(
+      JSON.stringify({
+        message: "Internal server error",
+      }),
+    );
+  }
+};
+
+export const getUserById = async (req, res, id) => {
+  try {
+    const user = await getUserByIdService(id);
+
+    if (!user) {
+      res.statusCode = 404;
+      res.end(
+        JSON.stringify({
+          message: "User not found",
+        }),
+      );
+      return;
+    }
+
+    res.statusCode = 200;
+    res.end(
+      JSON.stringify({
+        data: user,
+      }),
+    );
+  } catch (error) {
+    console.log("GET USER BY ID ERROR - ", error);
+    res.statusCode = 500;
     res.end(
       JSON.stringify({
         message: "Internal server error",

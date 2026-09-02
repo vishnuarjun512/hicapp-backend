@@ -1,6 +1,7 @@
 import {
   createUserService,
   editProfileService,
+  getUserByEmail,
   getUserByIdService,
   getUsersService,
 } from "../services/user.service.js";

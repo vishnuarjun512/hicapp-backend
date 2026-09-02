@@ -13,7 +13,7 @@ export async function createUserService(email, password) {
   return result.rows[0];
 }
 
-export async function getUsersService() {
+export async function getAllUsersService() {
   const result = await pool.query(`
     SELECT id, name, email, created_at
     FROM users
@@ -23,7 +23,7 @@ export async function getUsersService() {
   return result.rows;
 }
 
-export const getUserByEmail = async (email) => {
+export const getUserByEmailService = async (email) => {
   const query = `SELECT * 
   FROM users 
   WHERE email=$1`;
@@ -33,13 +33,13 @@ export const getUserByEmail = async (email) => {
 
 export const getUserByIdService = async (id) => {
   const query = `SELECT * 
-  FROM users 
+  FROM users
   WHERE id=$1`;
   const result = await pool.query(query, [id]);
   return result.rows[0];
 };
 
-export async function deleteUserByEmail(email) {
+export async function deleteUserByEmailService(email) {
   const result = await pool.query(
     `
       DELETE FROM users
@@ -59,7 +59,7 @@ export const editProfileService = async (id, name, handle, bio) => {
   await pool.query(query, [id, name, handle, bio]);
 };
 
-export const createUsersTable = async () => {
+export const createUsersTableService = async () => {
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
@@ -80,7 +80,7 @@ export const createUsersTable = async () => {
   }
 };
 
-export async function deleteUsersTable() {
+export async function deleteUsersTableService() {
   await pool.query(`
     DROP TABLE IF EXISTS users;
   `);

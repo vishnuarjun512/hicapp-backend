@@ -1,15 +1,15 @@
 import {
   createUserService,
   editProfileService,
-  getUserByEmail,
+  getAllUsersService,
+  getUserByEmailService,
   getUserByIdService,
-  getUsersService,
 } from "../services/user.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 
 export const getUsersController = async (req, res) => {
   try {
-    const users = await getUsersService();
+    const users = await getAllUsersService();
 
     res.statusCode = 200;
 
@@ -93,7 +93,7 @@ export const signInUser = async (req, res) => {
     const data = await BodyReader(req);
     const { email, password } = data;
 
-    const user = await getUserByEmail(email);
+    const user = await getUserByEmailService(email);
 
     if (user) {
       if (password == user.password) {

@@ -1,6 +1,6 @@
 import pool from "../config/db.js";
 
-export async function createUserService(name, email, password) {
+export async function createUserService(email, password) {
   const result = await pool.query(
     `
       INSERT INTO users (email, password)
@@ -24,33 +24,44 @@ export async function getUsersService() {
 }
 
 export const getUserByEmail = async (email) => {
-  const query = `SELECT FROM users WHERE email=$1`;
+  const query = `SELECT * 
+  FROM users 
+  WHERE email=$1`;
   const result = await pool.query(query, [email]);
-
   return result.rows[0];
 };
 
-export async function deleteUserByNameService(name) {
+export async function deleteUserByEmail(email) {
   const result = await pool.query(
     `
       DELETE FROM users
-      WHERE name = $1
+      WHERE email = $1
       RETURNING id, name, email, created_at;
     `,
-    [name],
+    [email],
   );
-
   return result.rows[0];
 }
+
+export const editProfileService = async (id, name, handle, bio) => {
+  const query = `UPDATE users
+  SET name=$2, handle=$3, bio=$4 
+  WHERE id=$1`;
+
+  await pool.query(query, [id, name, handle, bio]);
+};
 
 export const createUsersTable = async () => {
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         name VARCHAR(100),
         email VARCHAR(255),
-        password TEXT,
+        handle VARCHAR(100),
+        password TEXT NOT NULL,
+        bio VARCHAR(255),
+        profilePicUrl VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);

@@ -1,7 +1,12 @@
 import readline from "readline";
 import pool from "./config/db.js";
-import { createUserService, createUsersTable, deleteUserByNameService, deleteUsersTable, getUsersService } from "./services/user.service.js";
-
+import {
+  createUserService,
+  createUsersTable,
+  deleteUserByEmail,
+  deleteUsersTable,
+  getUsersService,
+} from "./services/user.service.js";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -51,11 +56,7 @@ async function main() {
           const email = await ask("Email: ");
           const password = await ask("Password: ");
 
-          const user = await createUserService(
-            name,
-            email,
-            password,
-          );
+          const user = await createUserService(name, email, password);
 
           console.log("\n✅ User created:");
           console.log(user);
@@ -94,7 +95,7 @@ async function main() {
             break;
           }
 
-          const deletedUser = await deleteUserByNameService(name);
+          const deletedUser = await deleteUserByEmail(name);
 
           if (!deletedUser) {
             console.log(`❌ No user found with name "${name}".`);
@@ -110,13 +111,9 @@ async function main() {
         // DELETE TABLE
         // --------------------------------
         case "5": {
-          console.log(
-            "\n⚠️ WARNING: This will delete the entire users table.",
-          );
+          console.log("\n⚠️ WARNING: This will delete the entire users table.");
 
-          const confirm = await ask(
-            'Type "DELETE USERS TABLE" to continue: ',
-          );
+          const confirm = await ask('Type "DELETE USERS TABLE" to continue: ');
 
           if (confirm !== "DELETE USERS TABLE") {
             console.log("❌ Operation cancelled.");

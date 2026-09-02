@@ -1,5 +1,6 @@
 import {
   createUserService,
+  editProfileService,
   getUserByEmail,
   getUsersService,
 } from "../services/user.service.js";
@@ -61,7 +62,7 @@ export const signInUser = async (req, res) => {
     const { email, password } = data;
 
     const user = await getUserByEmail(email);
-    console.log(user);
+
     if (user) {
       if (password == user.password) {
         console.log(user.email, " has logged in");
@@ -99,6 +100,30 @@ export const signInUser = async (req, res) => {
     res.end(
       JSON.stringify({
         message: "Internal Server Erorr",
+      }),
+    );
+  }
+};
+
+export const editProfile = async (req, res, id) => {
+  try {
+    const data = await BodyReader(req);
+    const { name, handle, bio } = data;
+    await editProfileService(id, name, handle, bio).then(() => {
+      console.log("Profile Updated Successfully");
+      res.statusCode = 200;
+      res.end(
+        JSON.stringify({
+          message: "Profile Updated Successfully",
+        }),
+      );
+    });
+  } catch (error) {
+    console.log("EDIT PROFILE ERROR - ", error);
+    res.statusCode = 500;
+    res.end(
+      JSON.stringify({
+        message: "Internal Server Error",
       }),
     );
   }

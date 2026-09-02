@@ -1,4 +1,5 @@
 import {
+  editProfile,
   getUsersController,
   registerUser,
   signInUser,
@@ -17,6 +18,13 @@ export function userRoutes(req, res) {
 
   if (req.method === "POST" && req.url === "/api/auth/login") {
     signInUser(req, res);
+    return true;
+  }
+
+  if (req.method === "PUT" && req.url.startsWith("/api/user/edit-profile/")) {
+    const id = req.url.split("/").pop();
+
+    editProfile(req, res, id);
     return true;
   }
 

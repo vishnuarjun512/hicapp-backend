@@ -70,6 +70,16 @@ export const editProfileService = async (
   await pool.query(query, [id, name, handle, bio, verified]);
 };
 
+export const toggleIsPrivateService = async (id, is_private) => {
+  const query = `
+    UPDATE users
+    SET is_private=$2
+    WHERE id=$1
+  `;
+
+  await pool.query(query, [id, is_private]);
+};
+
 export const createUsersTableService = async () => {
   try {
     await pool.query(createUsersTableQuery);

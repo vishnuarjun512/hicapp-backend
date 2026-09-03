@@ -4,6 +4,7 @@ import {
   getUsersController,
   registerUser,
   signInUser,
+  togglePrivate,
 } from "../controller/user.controller.js";
 
 export function userRoutes(req, res) {
@@ -32,6 +33,15 @@ export function userRoutes(req, res) {
   if (req.method === "GET" && req.url.startsWith("/api/user/")) {
     const id = req.url.split("/").pop();
     getUserById(req, res, id);
+    return true;
+  }
+
+  if (
+    req.method == "PATCH" &&
+    req.url.startsWith("/api/user/toggleIsPrivate/")
+  ) {
+    const userId = req.url.split("/").pop();
+    togglePrivate(req, res, userId);
     return true;
   }
 

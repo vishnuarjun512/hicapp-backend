@@ -4,6 +4,7 @@ import {
   getAllUsersService,
   getUserByEmailService,
   getUserByIdService,
+  toggleIsPrivateService,
 } from "../services/user.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 
@@ -161,5 +162,22 @@ export const editProfile = async (req, res, id) => {
         message: "Internal Server Error",
       }),
     );
+  }
+};
+
+export const togglePrivate = async (req, res, id) => {
+  try {
+    const data = await BodyReader(req);
+    const { is_private } = data;
+    await toggleIsPrivateService(id, is_private).then(() => {
+      res.statusCode = 200;
+      res.end(
+        JSON.stringify({
+          message: `Switched to ${is_private ? "Private" : "Public"} Account`,
+        }),
+      );
+    });
+  } catch (error) {
+    console.log("TOGGLE IS PRIVATE CONTROLLER ERROR");
   }
 };

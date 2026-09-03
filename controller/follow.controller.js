@@ -214,30 +214,6 @@ export const rejectFollowRequest = async (req, res, id) => {
   }
 };
 
-export const getSuggestedUsers = async (req, res, userId) => {
-  try {
-    const suggested = await getSuggestedUsersService(userId);
-
-    res.statusCode = 200;
-
-    res.end(
-      JSON.stringify({
-        suggested,
-      }),
-    );
-  } catch (error) {
-    console.log("GET SUGGESTED USERS CONTROLLER ERROR - ", error);
-
-    res.statusCode = 500;
-
-    res.end(
-      JSON.stringify({
-        message: "Internal Server Error",
-      }),
-    );
-  }
-};
-
 export const getAllUsersFollowersFollowingFRSuggestedController = async (
   req,
   res,

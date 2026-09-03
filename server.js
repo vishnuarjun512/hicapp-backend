@@ -3,6 +3,7 @@ import http from "http";
 import pool from "./config/db.js";
 import { userRoutes } from "./routes/user.route.js";
 import { postRoutes } from "./routes/post.route.js";
+import { followRoutes } from "./routes/follow.route.js";
 
 dotenv.config();
 const PORT = process.env.PORT;
@@ -25,7 +26,6 @@ const server = http.createServer((req, res) => {
   res.setHeader("Content-Type", "application/json");
 
   const userRouteshandled = userRoutes(req, res);
-
   if (userRouteshandled) {
     return;
   }
@@ -36,9 +36,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const followRoutesHandled = followRoutes(req, res);
+  if (followRoutesHandled) {
+    return;
+  }
+
   if (req.method == "GET" && req.url == "/") {
     res.statusCode = 200;
-
     res.end(
       JSON.stringify({
         message: "HIKE API is running",
@@ -47,6 +51,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  console.log(req.url, req.method);
   res.statusCode = 404;
   res.end(
     JSON.stringify({

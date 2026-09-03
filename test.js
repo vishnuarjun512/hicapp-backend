@@ -11,6 +11,8 @@ import {
   getPostsByUserIdService,
 } from "./services/post.service.js";
 
+import { createFollowTables } from "./services/follow.service.js";
+
 const rl = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
@@ -49,7 +51,9 @@ async function main() {
         // --------------------------------
         case "1":
           await createUsersTableService();
-          console.log("✅ Users table is ready.");
+          await createPostTableService();
+          await createFollowTables();
+          console.log("✅ All tables are ready.");
           break;
 
         // --------------------------------
@@ -89,19 +93,9 @@ async function main() {
         }
 
         // --------------------------------
-        // CREATE POSTS TABLE
-        // --------------------------------
-        case "4": {
-          await createPostTableService().then(() => {
-            console.log("\n✅ Post Table created:");
-          });
-          break;
-        }
-
-        // --------------------------------
         // CREATE POST
         // --------------------------------
-        case "5": {
+        case "4": {
           const userId = "a505e7b8-be9e-4cfc-9c68-20cb9ec27f88";
           const content = await ask("Write post content: ");
 
@@ -115,7 +109,7 @@ async function main() {
           break;
         }
 
-        case "6":
+        case "5":
           const userId = "a505e7b8-be9e-4cfc-9c68-20cb9ec27f88";
           const posts = await getPostsByUserIdService(userId);
           console.log(posts);

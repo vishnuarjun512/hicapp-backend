@@ -1,4 +1,5 @@
 import pool from "../config/db.js";
+import { createUsersTableQuery } from "../query/create-tables.js";
 
 export async function createUserService(email, password) {
   try {
@@ -55,28 +56,23 @@ export async function deleteUserByEmailService(email) {
   return result.rows[0];
 }
 
-export const editProfileService = async (id, name, handle, bio) => {
+export const editProfileService = async (
+  id,
+  name,
+  handle,
+  bio,
+  verified = false,
+) => {
   const query = `UPDATE users
-  SET name=$2, handle=$3, bio=$4 
+  SET name=$2, handle=$3, bio=$4 , verified=$5
   WHERE id=$1`;
 
-  await pool.query(query, [id, name, handle, bio]);
+  await pool.query(query, [id, name, handle, bio, verified]);
 };
 
 export const createUsersTableService = async () => {
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name VARCHAR(100),
-        email VARCHAR(255),
-        handle VARCHAR(100),
-        password TEXT NOT NULL,
-        bio VARCHAR(255),
-        profilePicUrl VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
+    await pool.query(createUsersTableQuery);
 
     console.log("✅ Users table created");
   } catch (error) {

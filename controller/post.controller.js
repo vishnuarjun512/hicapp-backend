@@ -59,8 +59,17 @@ export const getPostsControllerByUserID = async (req, res, userId) => {
 
 export const deletePostByIdController = async (req, res, id) => {
   try {
-    const post = await getPostsByUserIdService(id);
-    console.log(post);
+    await deletePostByIdService(id);
+
+    res.statusCode = 200;
+
+    console.log("Post Deleted");
+
+    res.end(
+      JSON.stringify({
+        message: "Post Deleted",
+      }),
+    );
   } catch (error) {
     console.log("DELETE POST BY ID CONTROLLER ERROR - ", error);
     res.statusCode = 500;

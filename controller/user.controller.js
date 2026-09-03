@@ -52,7 +52,7 @@ export const getUserById = async (req, res, id) => {
       }),
     );
   } catch (error) {
-    console.log("GET USER BY ID ERROR - ", error);
+    console.log("GET USER BY ID CONTROLLER ERROR - ", error);
     res.statusCode = 500;
     res.end(
       JSON.stringify({
@@ -143,18 +143,18 @@ export const signInUser = async (req, res) => {
 export const editProfile = async (req, res, id) => {
   try {
     const data = await BodyReader(req);
-    const { name, handle, bio } = data;
-    await editProfileService(id, name, handle, bio).then(() => {
-      console.log("Profile Updated Successfully");
-      res.statusCode = 200;
-      res.end(
-        JSON.stringify({
-          message: "Profile Updated Successfully",
-        }),
-      );
-    });
+    const { name, handle, bio, verified } = data;
+
+    await editProfileService(id, name, handle, bio, verified);
+    res.statusCode = 200;
+    res.end(
+      JSON.stringify({
+        message: "Profile Updated Successfully",
+      }),
+    );
+    return;
   } catch (error) {
-    console.log("EDIT PROFILE ERROR - ", error);
+    console.log("EDIT PROFILE CONTROLLER ERROR - ", error);
     res.statusCode = 500;
     res.end(
       JSON.stringify({

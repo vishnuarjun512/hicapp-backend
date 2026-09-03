@@ -1,32 +1,30 @@
 import pool from "../config/db.js";
+import { createPostTableQuery } from "../query/create-tables.js";
 
 export const createPostTableService = async () => {
   try {
-    const query = `
-      CREATE TABLE IF NOT EXISTS posts (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id UUID NOT NULL,
+    await pool.query(createPostTableQuery);
 
-        body VARCHAR(255),
-        visibility VARCHAR(20) NOT NULL DEFAULT 'public',
-        location TEXT,
-
-        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-        CONSTRAINT fk_posts_user
-          FOREIGN KEY (user_id)
-          REFERENCES users(id)
-          ON DELETE CASCADE,
-
-        CONSTRAINT posts_visibility_check
-          CHECK (visibility IN ('public', 'friends', 'private'))
-      );
-    `;
-
-    await pool.query(query);
+    console.log("✅ Post table created");
   } catch (error) {
     console.error("❌ CREATE POSTS TABLE ERROR - ", error);
+    throw error;
+  }
+};
+
+export const getPostByIdService = async (postId) => {
+  try {
+    const query = `
+        SELECT * FROM posts 
+        WHERE id=$1 
+        RETURNING 
+          id, user_id, body, visibility, location, created_at, updated_at  
+      `;
+
+    const post = await pool.query(query, [postId]);
+    return post.rows[0];
+  } catch (error) {
+    console.log("DELETE POST BY ID ERROR - ", error);
     throw error;
   }
 };
@@ -43,7 +41,7 @@ export const getPostsByUserIdService = async (
           'id', u.id,
           'name', u.name,
           'handle', u.handle,
-          'profilePicUrl', u.profilePicUrl
+          'profilePicUrl', u.profile_pic_url
         ) AS author
       FROM posts p
       JOIN users u ON p.user_id = u.id
@@ -93,7 +91,7 @@ export const createPostService = async (
 
 export const deletePostByIdService = async (id) => {
   try {
-    const query = `DELETE * from POSTS WHERE id=$1`;
+    const query = `DELETE FROM posts WHERE id=$1 RETURNING *`;
     const result = await pool.query(query, [id]);
     return result.rows[0];
   } catch (error) {

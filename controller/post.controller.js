@@ -43,7 +43,7 @@ export const getPostsControllerByUserID = async (req, res, userId) => {
     res.statusCode = 200;
     res.end(
       JSON.stringify({
-        data: posts,
+        posts,
       }),
     );
   } catch (error) {

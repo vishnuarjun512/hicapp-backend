@@ -44,7 +44,7 @@ export const getPostsByUserIdService = async (
           'name', u.name,
           'handle', u.handle,
           'profilePicUrl', u.profilePicUrl
-        ) AS user
+        ) AS author
       FROM posts p
       JOIN users u ON p.user_id = u.id
       WHERE p.user_id = $1

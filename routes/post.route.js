@@ -1,6 +1,7 @@
 import {
   createPostController,
   deletePostByIdController,
+  getPostsControllerByUserID,
 } from "../controller/post.controller.js";
 
 export function postRoutes(req, res) {

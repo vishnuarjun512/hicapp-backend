@@ -4,19 +4,6 @@ import {
   createFollowTableQuery,
 } from "../query/create-tables.js";
 
-export const createFollowTables = async () => {
-  try {
-    await pool.query(createFollowTableQuery);
-    console.log("✅ Follow table created");
-
-    await pool.query(createFollowRequestTableQuery);
-    console.log("✅ Follow request table created");
-  } catch (error) {
-    console.log("CREATE FOLLOW TABLE SERVICE ERROR - ", error);
-    throw error;
-  }
-};
-
 export const createFollowService = async (followerId, followingId) => {
   try {
     const query = `
@@ -38,8 +25,7 @@ export const deleteFollowService = async (followerId, followingId) => {
   try {
     const query = `
       DELETE FROM follow
-      WHERE follower_id = $1, following_id = $2
-      VALUES ($1, $2)
+      WHERE follower_id = $1 AND following_id = $2
       RETURNING *;
     `;
 
@@ -47,7 +33,7 @@ export const deleteFollowService = async (followerId, followingId) => {
 
     return result.rows[0];
   } catch (error) {
-    console.log("CREATE FOLLOW SERVICE ERROR - ", error);
+    console.log("DELETE FOLLOW SERVICE ERROR - ", error);
     throw error;
   }
 };
@@ -100,7 +86,26 @@ export const getFollowRequestByIdService = async (id) => {
 
     return result.rows[0];
   } catch (error) {
-    console.log("GET FOLLOW REQUEST SERVICE ERROR - ", error);
+    console.log("GET FOLLOW REQUEST SERVICE BY ID ERROR - ", error);
+
+    throw error;
+  }
+};
+
+export const getFollowRequestByUserIDService = async (receiverId) => {
+  try {
+    const query = `
+      SELECT u.id, u.name, u.handle, u.email, u.profile_pic_url, u.is_private, u.verified, f.id as "fr_id"
+      FROM follow_request f
+      JOIN users u
+        ON f.sender_id = u.id
+      WHERE f.receiver_id = $1;
+    `;
+
+    const result = await pool.query(query, [receiverId]);
+    return result.rows;
+  } catch (error) {
+    console.log("GET FOLLOW REQUEST SERVICE BY USER ID ERROR - ", error);
 
     throw error;
   }
@@ -200,6 +205,19 @@ export const getSuggestedUsersService = async (userId) => {
   } catch (error) {
     console.log("GET SUGGESTED USERS SERVICE ERROR - ", error);
 
+    throw error;
+  }
+};
+
+export const createFollowTables = async () => {
+  try {
+    await pool.query(createFollowTableQuery);
+    console.log("✅ Follow table created");
+
+    await pool.query(createFollowRequestTableQuery);
+    console.log("✅ Follow request table created");
+  } catch (error) {
+    console.log("CREATE FOLLOW TABLE SERVICE ERROR - ", error);
     throw error;
   }
 };

@@ -25,7 +25,7 @@ export const followRoutes = (req, res) => {
   if (
     req.method === "DELETE" &&
     req.url.startsWith("/api/users/") &&
-    req.url.endsWith("/follow")
+    req.url.endsWith("/unfollow")
   ) {
     const parts = req.url.split("/");
     const id = parts[3];

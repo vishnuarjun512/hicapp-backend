@@ -4,17 +4,20 @@ import {
   createFollowRequestService,
   createFollowService,
   deleteFollowRequestService,
+  deleteFollowService,
   getFollowersService,
   getFollowingService,
   getFollowRequestByIdService,
+  getFollowRequestByUserIDService,
+  getFollowService,
   getSuggestedUsersService,
 } from "../services/follow.service.js";
 
-export const followUser = async (req, res) => {
+export const followUser = async (req, res, receiver_id) => {
   try {
     const data = await BodyReader(req);
 
-    const { sender_id, receiver_id } = data;
+    const { sender_id } = data;
 
     const receiver = await getUserByIdService(receiver_id);
 
@@ -60,25 +63,22 @@ export const followUser = async (req, res) => {
   }
 };
 
-export const unfollowUser = async (req, res, id) => {
+export const unfollowUser = async (req, res, following_id) => {
   try {
     const data = await BodyReader(req);
 
     const { follower_id } = data;
 
-    const following_id = id;
-
     const follow = await getFollowService(follower_id, following_id);
 
     if (!follow) {
-      res.statusCode = 404;
-
+      res.statusCode = 204;
+      console.log("You are not following this User!");
       res.end(
         JSON.stringify({
           message: "You are not following this user",
         }),
       );
-
       return;
     }
 
@@ -88,7 +88,7 @@ export const unfollowUser = async (req, res, id) => {
 
     res.end(
       JSON.stringify({
-        message: "User unfollowed",
+        message: "Unfollowed",
       }),
     );
   } catch (error) {
@@ -223,7 +223,7 @@ export const getAllUsersFollowersFollowingFRSuggestedController = async (
     const suggested = await getSuggestedUsersService(userId);
     const followers = await getFollowersService(userId);
     const following = await getFollowingService(userId);
-    const followRequests = await getFollowRequestByIdService(userId);
+    const followRequests = await getFollowRequestByUserIDService(userId);
 
     res.statusCode = 200;
 

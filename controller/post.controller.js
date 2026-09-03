@@ -1,5 +1,9 @@
-import { createPostService } from "../services/post.service.js";
+import {
+  createPostService,
+  getPostsByUserIdService,
+} from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
+import { URL } from "node:url";
 
 export const createPostController = async (req, res, userId) => {
   try {
@@ -18,6 +22,31 @@ export const createPostController = async (req, res, userId) => {
     });
   } catch (error) {
     console.log("CREATE POST CONTROLLER ERROR - ", error);
+    res.statusCode = 500;
+    res.end(
+      JSON.stringify({
+        message: "Internal Server Error",
+      }),
+    );
+  }
+};
+
+export const getPostsControllerByUserID = async (req, res, userId) => {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const page = parseInt(url.searchParams.get("page")) || 1;
+    const limit = parseInt(url.searchParams.get("limit")) || 5;
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const posts = await getPostsByUserIdService(userId, startIndex, endIndex);
+    res.statusCode = 200;
+    res.end(
+      JSON.stringify({
+        data: posts,
+      }),
+    );
+  } catch (error) {
+    console.log("GET POSTS BY USER ID CONTROLLER ERROR - ", error);
     res.statusCode = 500;
     res.end(
       JSON.stringify({

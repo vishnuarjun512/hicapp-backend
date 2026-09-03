@@ -8,7 +8,7 @@ import {
 import {
   createPostService,
   createPostTableService,
-  getAllPostService,
+  getPostsByUserIdService,
 } from "./services/post.service.js";
 
 const rl = readline.createInterface({
@@ -116,7 +116,8 @@ async function main() {
         }
 
         case "6":
-          const posts = await getAllPostService();
+          const userId = "a505e7b8-be9e-4cfc-9c68-20cb9ec27f88";
+          const posts = await getPostsByUserIdService(userId);
           console.log(posts);
           break;
 

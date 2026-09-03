@@ -31,13 +31,37 @@ export const createPostTableService = async () => {
   }
 };
 
-export const getAllPostService = async () => {
+export const getPostsByUserIdService = async (
+  userId,
+  startIndex = 0,
+  endIndex = 5,
+) => {
   try {
-    const query = `SELECT * from posts;`;
-    const posts = await pool.query(query);
+    const query = `
+      SELECT p.id, p.body, p.visibility, p.location, p.created_at,
+        json_build_object(
+          'id', u.id,
+          'name', u.name,
+          'handle', u.handle,
+          'profilePicUrl', u.profilePicUrl
+        ) AS user
+      FROM posts p
+      JOIN users u ON p.user_id = u.id
+      WHERE p.user_id = $1
+      ORDER BY p.created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
+
+    const posts = await pool.query(query, [
+      userId,
+      endIndex - startIndex,
+      startIndex,
+    ]);
+
     return posts.rows;
   } catch (error) {
-    console.log("GET POSTS ERROR - ", error);
+    console.log("GET POSTS BY USER ID SERVICE ERROR - ", error);
+    throw error;
   }
 };
 
@@ -48,10 +72,12 @@ export const createPostService = async (
   location,
 ) => {
   try {
-    const query = `INSERT INTO posts (user_id, body, visibility, location)
-               VALUES($1, $2, $3, $4)
-               RETURNING id, user_id, body, visibility, location
-        `;
+    const query = `
+    INSERT INTO posts 
+    (user_id, body, visibility, location)
+    VALUES ($1, $2, $3, $4)
+    RETURNING id
+    `;
 
     const post = await pool.query(query, [
       userid,
@@ -62,5 +88,16 @@ export const createPostService = async (
     return post.rows[0];
   } catch (error) {
     console.log("CREATE POST SERVICE ERROR - ", error);
+  }
+};
+
+export const deletePostByIdService = async (id) => {
+  try {
+    const query = `DELETE * from POSTS WHERE id=$1`;
+    const result = await pool.query(query, [id]);
+    return result.rows[0];
+  } catch (error) {
+    console.log("DELETE POST SERVICE ERROR - ", error);
+    throw error;
   }
 };

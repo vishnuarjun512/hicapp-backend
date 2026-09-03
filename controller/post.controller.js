@@ -1,5 +1,6 @@
 import {
   createPostService,
+  deletePostByIdService,
   getPostsByUserIdService,
 } from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
@@ -47,6 +48,21 @@ export const getPostsControllerByUserID = async (req, res, userId) => {
     );
   } catch (error) {
     console.log("GET POSTS BY USER ID CONTROLLER ERROR - ", error);
+    res.statusCode = 500;
+    res.end(
+      JSON.stringify({
+        message: "Internal Server Error",
+      }),
+    );
+  }
+};
+
+export const deletePostByIdController = async (req, res, id) => {
+  try {
+    const post = await getPostsByUserIdService(id);
+    console.log(post);
+  } catch (error) {
+    console.log("DELETE POST BY ID CONTROLLER ERROR - ", error);
     res.statusCode = 500;
     res.end(
       JSON.stringify({

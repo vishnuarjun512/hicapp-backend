@@ -6,6 +6,11 @@ import {
   getUserByIdService,
   toggleIsPrivateService,
 } from "../services/user.service.js";
+import {
+  getFollowingService,
+  getFollowersService,
+} from "../services/follow.service.js";
+import { getPostsByUserIdService } from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 
 export const getUsersController = async (req, res) => {
@@ -179,5 +184,41 @@ export const togglePrivate = async (req, res, id) => {
     });
   } catch (error) {
     console.log("TOGGLE IS PRIVATE CONTROLLER ERROR");
+  }
+};
+
+export const getProfileData = async (req, res, userId) => {
+  try {
+    const user = await getUserByIdService(userId);
+    if (!user) {
+      res.statusCode = 404;
+      res.end(
+        JSON.stringify({
+          message: "User not found",
+        }),
+      );
+      return;
+    }
+
+    const followers = await getFollowersService(user.id);
+    const following = await getFollowingService(user.id);
+    const posts = await getPostsByUserIdService(user.id);
+
+    res.statusCode = 200;
+    res.end(
+      JSON.stringify({
+        followers,
+        following,
+        posts,
+      }),
+    );
+  } catch (error) {
+    console.log("GET USER PROFILE DATA BY ID CONTROLLER ERROR - ", error);
+    res.statusCode = 500;
+    res.end(
+      JSON.stringify({
+        message: "Internal server error",
+      }),
+    );
   }
 };

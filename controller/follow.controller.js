@@ -5,10 +5,10 @@ import {
   createFollowService,
   deleteFollowRequestService,
   deleteFollowService,
+  getAllFollowRequestByUserIDService,
   getFollowersService,
   getFollowingService,
-  getFollowRequestByIdService,
-  getFollowRequestByUserIDService,
+  getFollowRequestService,
   getFollowService,
   getSuggestedUsersService,
 } from "../services/follow.service.js";
@@ -104,13 +104,13 @@ export const unfollowUser = async (req, res, following_id) => {
   }
 };
 
-export const acceptFollowRequest = async (req, res, id) => {
+export const acceptFollowRequest = async (req, res, sender_id) => {
   try {
     const data = await BodyReader(req);
 
     const { receiver_id } = data;
 
-    const request = await getFollowRequestByIdService(id);
+    const request = await getFollowRequestService(sender_id, receiver_id);
 
     if (!request) {
       res.statusCode = 404;
@@ -124,21 +124,9 @@ export const acceptFollowRequest = async (req, res, id) => {
       return;
     }
 
-    if (request.receiver_id !== receiver_id) {
-      res.statusCode = 403;
-
-      res.end(
-        JSON.stringify({
-          message: "You cannot accept this request",
-        }),
-      );
-
-      return;
-    }
-
     await createFollowService(request.sender_id, request.receiver_id);
 
-    await deleteFollowRequestService(id);
+    await deleteFollowRequestService(request.id);
 
     res.statusCode = 200;
 
@@ -160,13 +148,13 @@ export const acceptFollowRequest = async (req, res, id) => {
   }
 };
 
-export const rejectFollowRequest = async (req, res, id) => {
+export const rejectFollowRequest = async (req, res, sender_id) => {
   try {
     const data = await BodyReader(req);
 
     const { receiver_id } = data;
 
-    const request = await getFollowRequestByIdService(id);
+    const request = await getFollowRequestService(sender_id, receiver_id);
 
     if (!request) {
       res.statusCode = 404;
@@ -180,19 +168,7 @@ export const rejectFollowRequest = async (req, res, id) => {
       return;
     }
 
-    if (request.receiver_id !== receiver_id) {
-      res.statusCode = 403;
-
-      res.end(
-        JSON.stringify({
-          message: "You cannot reject this request",
-        }),
-      );
-
-      return;
-    }
-
-    await deleteFollowRequestService(id);
+    await deleteFollowRequestService(request.id);
 
     res.statusCode = 200;
 
@@ -223,7 +199,7 @@ export const getAllUsersFollowersFollowingFRSuggestedController = async (
     const suggested = await getSuggestedUsersService(userId);
     const followers = await getFollowersService(userId);
     const following = await getFollowingService(userId);
-    const followRequests = await getFollowRequestByUserIDService(userId);
+    const followRequests = await getAllFollowRequestByUserIDService(userId);
 
     res.statusCode = 200;
 

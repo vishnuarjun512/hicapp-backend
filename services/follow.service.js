@@ -74,25 +74,23 @@ export const createFollowRequestService = async (senderId, receiverId) => {
   }
 };
 
-export const getFollowRequestByIdService = async (id) => {
+export const getFollowRequestService = async (senderId, receiverId) => {
   try {
     const query = `
-      SELECT *
-      FROM follow_request
-      WHERE id = $1;
+      SELECT * from follow_request
+      WHERE sender_id = $1 AND receiver_id = $2;
     `;
 
-    const result = await pool.query(query, [id]);
-
+    const result = await pool.query(query, [senderId, receiverId]);
     return result.rows[0];
   } catch (error) {
-    console.log("GET FOLLOW REQUEST SERVICE BY ID ERROR - ", error);
+    console.log("GET FOLLOW REQUEST SERVICE ERROR - ", error);
 
     throw error;
   }
 };
 
-export const getFollowRequestByUserIDService = async (receiverId) => {
+export const getAllFollowRequestByUserIDService = async (receiverId) => {
   try {
     const query = `
       SELECT u.id, u.name, u.handle, u.email, u.profile_pic_url, u.is_private, u.verified, f.id as "fr_id"

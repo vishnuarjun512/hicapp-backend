@@ -42,9 +42,9 @@ export const followRoutes = (req, res) => {
     req.url.endsWith("/accept")
   ) {
     const parts = req.url.split("/");
-    const id = parts[3];
+    const senderId = parts[3];
 
-    acceptFollowRequest(req, res, id);
+    acceptFollowRequest(req, res, senderId);
 
     return true;
   }

@@ -109,6 +109,26 @@ export const getAllFollowRequestByUserIDService = async (receiverId) => {
   }
 };
 
+export const getAllSentFollowRequestsService = async (senderId) => {
+  try {
+    const query = `
+      SELECT u.*
+      FROM follow_request f
+      JOIN users u
+        ON f.receiver_id = u.id
+      WHERE f.sender_id = $1;
+    `;
+
+    const result = await pool.query(query, [senderId]);
+
+    return result.rows;
+  } catch (error) {
+    console.log("GET SENT FOLLOW REQUESTS SERVICE ERROR - ", error);
+
+    throw error;
+  }
+};
+
 export const deleteFollowRequestService = async (id) => {
   try {
     const query = `
@@ -188,12 +208,23 @@ export const getSuggestedUsersService = async (userId) => {
         u."profile_pic_url"
       FROM users u
       WHERE u.id <> $1
+
+      -- Don't show users I already follow
       AND NOT EXISTS (
         SELECT 1
         FROM follow f
         WHERE f.follower_id = $1
         AND f.following_id = u.id
       )
+
+      -- Dont show users I already sent a follow request to
+      AND NOT EXISTS (
+        SELECT 1
+        FROM follow_request fr
+        WHERE fr.sender_id = $1
+        AND fr.receiver_id = u.id
+      )
+
       ORDER BY u.created_at DESC;
     `;
 

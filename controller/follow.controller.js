@@ -6,6 +6,7 @@ import {
   deleteFollowRequestService,
   deleteFollowService,
   getAllFollowRequestByUserIDService,
+  getAllSentFollowRequestsService,
   getFollowersService,
   getFollowingService,
   getFollowRequestService,
@@ -32,7 +33,8 @@ export const followUser = async (req, res, receiver_id) => {
 
       res.end(
         JSON.stringify({
-          message: "Follow Request Sent",
+          message: "Follow Request Sent to " + receiver.name,
+          request: true,
         }),
       );
 
@@ -45,7 +47,8 @@ export const followUser = async (req, res, receiver_id) => {
 
     res.end(
       JSON.stringify({
-        message: "Followed User",
+        message: "Following " + receiver.name,
+        request: false,
       }),
     );
 
@@ -114,10 +117,10 @@ export const acceptFollowRequest = async (req, res, sender_id) => {
 
     if (!request) {
       res.statusCode = 404;
-
+      console.log("Follow Request does not exist");
       res.end(
         JSON.stringify({
-          message: "Follow request does not exist",
+          message: "Follow Request does not exist",
         }),
       );
 
@@ -200,6 +203,7 @@ export const getAllUsersFollowersFollowingFRSuggestedController = async (
     const followers = await getFollowersService(userId);
     const following = await getFollowingService(userId);
     const followRequests = await getAllFollowRequestByUserIDService(userId);
+    const sentFollowRequests = await getAllSentFollowRequestsService(userId);
 
     res.statusCode = 200;
 
@@ -209,6 +213,7 @@ export const getAllUsersFollowersFollowingFRSuggestedController = async (
         followers,
         following,
         followRequests,
+        sentFollowRequests,
       }),
     );
     return;

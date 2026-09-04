@@ -14,9 +14,9 @@ export const followRoutes = (req, res) => {
     req.url.endsWith("/follow")
   ) {
     const parts = req.url.split("/");
-    const id = parts[3];
+    const receiver_id = parts[3];
 
-    followUser(req, res, id);
+    followUser(req, res, receiver_id);
 
     return true;
   }
@@ -38,13 +38,13 @@ export const followRoutes = (req, res) => {
   // ACCEPT FOLLOW REQUEST
   if (
     req.method === "POST" &&
-    req.url.startsWith("/api/follow-requests/") &&
+    req.url.startsWith("/api/followrequest/") &&
     req.url.endsWith("/accept")
   ) {
     const parts = req.url.split("/");
-    const senderId = parts[3];
+    const receiver_id = parts[3];
 
-    acceptFollowRequest(req, res, senderId);
+    acceptFollowRequest(req, res, receiver_id);
 
     return true;
   }
@@ -52,7 +52,7 @@ export const followRoutes = (req, res) => {
   // REJECT FOLLOW REQUEST
   if (
     req.method === "POST" &&
-    req.url.startsWith("/api/follow-requests/") &&
+    req.url.startsWith("/api/followrequest/") &&
     req.url.endsWith("/reject")
   ) {
     const parts = req.url.split("/");

@@ -65,7 +65,7 @@ async function startServer() {
     await pool.query("SELECT 1");
     console.log("POSTGRESQL Connected");
 
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
   } catch (error) {

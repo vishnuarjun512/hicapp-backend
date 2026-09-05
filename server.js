@@ -4,6 +4,7 @@ import pool from "./config/db.js";
 import { userRoutes } from "./routes/user.route.js";
 import { postRoutes } from "./routes/post.route.js";
 import { followRoutes } from "./routes/follow.route.js";
+import { conversationRoutes } from "./routes/conversation.route.js";
 
 dotenv.config();
 const PORT = process.env.PORT;
@@ -38,6 +39,11 @@ const server = http.createServer((req, res) => {
 
   const followRoutesHandled = followRoutes(req, res);
   if (followRoutesHandled) {
+    return;
+  }
+
+  const conversationRoutesHandled = conversationRoutes(req, res);
+  if (conversationRoutesHandled) {
     return;
   }
 

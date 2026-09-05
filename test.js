@@ -10,8 +10,12 @@ import {
   createPostTableService,
   getPostsByUserIdService,
 } from "./services/post.service.js";
-
 import { createFollowTables } from "./services/follow.service.js";
+import { createConversationTableService } from "./services/conversation.service.js";
+import {
+  createIndexesForMessagesAndConversationService,
+  createMessageTableService,
+} from "./services/message.service.js";
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -53,6 +57,9 @@ async function main() {
           await createUsersTableService();
           await createPostTableService();
           await createFollowTables();
+          await createConversationTableService();
+          await createMessageTableService();
+          await createIndexesForMessagesAndConversationService();
           console.log("✅ All tables are ready.");
           break;
 

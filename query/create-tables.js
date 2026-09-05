@@ -85,3 +85,64 @@ export const createPostTableQuery = `
           CHECK (visibility IN ('public', 'friends', 'private'))
       );
     `;
+
+export const createConversationTableQuery = `
+  CREATE TABLE IF NOT EXISTS conversation(
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW() 
+  )
+`;
+
+export const createConversationParticipantsTableQuery = `
+  CREATE TABLE IF NOT EXISTS conversation_participants (
+    id UUID DEFAULT gen_random_uuid(),
+
+    conversation_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY (conversation_id, user_id),
+    
+    CONSTRAINT fk_conversation
+      FOREIGN KEY (conversation_id)
+      REFERENCES conversation(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_user
+      FOREIGN KEY (user_id)
+      REFERENCES users(id)
+      ON DELETE CASCADE
+  )
+`;
+
+export const createMessagesTableQuery = `
+  CREATE TABLE IF NOT EXISTS messages(
+    id UUID PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
+
+    conversation_id UUID NOT NULL,
+    sender_id UUID NOT NULL,
+
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    read_at TIMESTAMPTZ,
+
+    CONSTRAINT fk_message_conversation
+      FOREIGN KEY (conversation_id)
+      REFERENCES conversation(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_message_sender
+      FOREIGN KEY (sender_id)
+      REFERENCES users(id)
+      ON DELETE CASCADE
+  )
+`;
+
+export const createConversationIndexesQuery = `
+  CREATE INDEX IF NOT EXISTS idx_messages_conversation_created
+    ON messages(conversation_id, created_at DESC);
+
+  CREATE INDEX IF NOT EXISTS idx_conversation_participants_user
+    ON conversation_participants(user_id);
+`;

@@ -5,6 +5,7 @@ import {
   rejectFollowRequest,
   unfollowUser,
 } from "../controller/follow.controller.js";
+import { requireAuth, requireSameUser } from "../utils/jwt.js";
 
 export const followRoutes = (req, res) => {
   // FOLLOW USER
@@ -13,6 +14,7 @@ export const followRoutes = (req, res) => {
     req.url.startsWith("/api/users/") &&
     req.url.endsWith("/follow")
   ) {
+    if (!requireAuth(req, res)) return true;
     const parts = req.url.split("/");
     const receiver_id = parts[3];
 
@@ -27,6 +29,7 @@ export const followRoutes = (req, res) => {
     req.url.startsWith("/api/users/") &&
     req.url.endsWith("/unfollow")
   ) {
+    if (!requireAuth(req, res)) return true;
     const parts = req.url.split("/");
     const id = parts[3];
 
@@ -41,6 +44,7 @@ export const followRoutes = (req, res) => {
     req.url.startsWith("/api/followrequest/") &&
     req.url.endsWith("/accept")
   ) {
+    if (!requireAuth(req, res)) return true;
     const parts = req.url.split("/");
     const receiver_id = parts[3];
 
@@ -55,6 +59,7 @@ export const followRoutes = (req, res) => {
     req.url.startsWith("/api/followrequest/") &&
     req.url.endsWith("/reject")
   ) {
+    if (!requireAuth(req, res)) return true;
     const parts = req.url.split("/");
     const id = parts[3];
 
@@ -65,7 +70,10 @@ export const followRoutes = (req, res) => {
 
   // GET ALL USERS FOR FRIENDS PAGE
   if (req.method == "GET" && req.url.startsWith("/api/friends")) {
-    const userId = req.url.split("/").pop();
+    if (!requireAuth(req, res)) return true;
+    const userId =
+      req.url === "/api/friends" ? req.auth.userId : req.url.split("/").pop();
+    if (!requireSameUser(req, res, userId)) return true;
     getAllUsersFollowersFollowingFRSuggestedController(req, res, userId);
     return true;
   }

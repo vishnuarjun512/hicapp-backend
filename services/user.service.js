@@ -7,7 +7,7 @@ export async function createUserService(email, password) {
       `
       INSERT INTO users (email, password)
       VALUES ($1, $2)
-      RETURNING id, name, email, created_at
+      RETURNING id, name, email, handle, bio, profile_pic_url, is_private, verified, created_at
     `,
       [email, password],
     );
@@ -20,7 +20,7 @@ export async function createUserService(email, password) {
 
 export async function getAllUsersService() {
   const result = await pool.query(`
-    SELECT id, name, email, created_at
+    SELECT id, name, email, handle, bio, profile_pic_url, is_private, verified, created_at
     FROM users
     ORDER BY id;
   `);
@@ -37,9 +37,9 @@ export const getUserByEmailService = async (email) => {
 };
 
 export const getUserByIdService = async (id) => {
-  const query = `SELECT * 
-  FROM users
-  WHERE id=$1`;
+  const query = `SELECT id, name, email, handle, bio, profile_pic_url, is_private, verified, created_at
+    FROM users
+    WHERE id=$1`;
   const result = await pool.query(query, [id]);
   return result.rows[0];
 };

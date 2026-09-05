@@ -12,6 +12,7 @@ import {
 } from "../services/follow.service.js";
 import { getPostsByUserIdService } from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
+import { createAccessToken } from "../utils/jwt.js";
 
 export const getUsersController = async (req, res) => {
   try {
@@ -74,18 +75,10 @@ export const registerUser = async (req, res) => {
 
     const { email, password } = data;
 
-    createUserService(email, password).then((data) => {
-      res.statusCode = 200;
-      res.end(
-        JSON.stringify({
-          message: "Created User Successfulluy",
-          user: data,
-        }),
-      );
-      return;
-    });
-
-    return;
+    const user = await createUserService(email, password);
+    const accessToken = createAccessToken(user);
+    res.statusCode = 201;
+    res.end(JSON.stringify({ message: "User created successfully", user, accessToken }));
   } catch (error) {
     console.log("CREATE USER ERROR - ", error);
     res.statusCode = 500;
@@ -112,7 +105,8 @@ export const signInUser = async (req, res) => {
         res.end(
           JSON.stringify({
             message: "Sign In Success",
-            user,
+            user: { id: user.id, name: user.name, email: user.email, handle: user.handle, bio: user.bio, profile_pic_url: user.profile_pic_url, is_private: user.is_private, verified: user.verified, created_at: user.created_at },
+            accessToken: createAccessToken(user),
           }),
         );
 

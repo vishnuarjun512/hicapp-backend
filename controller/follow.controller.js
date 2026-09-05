@@ -1,4 +1,3 @@
-import { BodyReader } from "../utils/dataReader.js";
 import { getUserByIdService } from "../services/user.service.js";
 import {
   createFollowRequestService,
@@ -16,9 +15,7 @@ import {
 
 export const followUser = async (req, res, receiver_id) => {
   try {
-    const data = await BodyReader(req);
-
-    const { sender_id } = data;
+    const sender_id = req.auth.userId;
 
     const receiver = await getUserByIdService(receiver_id);
 
@@ -68,9 +65,7 @@ export const followUser = async (req, res, receiver_id) => {
 
 export const unfollowUser = async (req, res, following_id) => {
   try {
-    const data = await BodyReader(req);
-
-    const { follower_id } = data;
+    const follower_id = req.auth.userId;
 
     const follow = await getFollowService(follower_id, following_id);
 
@@ -109,9 +104,7 @@ export const unfollowUser = async (req, res, following_id) => {
 
 export const acceptFollowRequest = async (req, res, sender_id) => {
   try {
-    const data = await BodyReader(req);
-
-    const { receiver_id } = data;
+    const receiver_id = req.auth.userId;
 
     const request = await getFollowRequestService(sender_id, receiver_id);
 
@@ -153,9 +146,7 @@ export const acceptFollowRequest = async (req, res, sender_id) => {
 
 export const rejectFollowRequest = async (req, res, sender_id) => {
   try {
-    const data = await BodyReader(req);
-
-    const { receiver_id } = data;
+    const receiver_id = req.auth.userId;
 
     const request = await getFollowRequestService(sender_id, receiver_id);
 
@@ -196,7 +187,7 @@ export const rejectFollowRequest = async (req, res, sender_id) => {
 export const getAllUsersFollowersFollowingFRSuggestedController = async (
   req,
   res,
-  userId,
+  userId = req.auth.userId,
 ) => {
   try {
     const suggested = await getSuggestedUsersService(userId);

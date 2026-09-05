@@ -57,9 +57,15 @@ export const getPostsControllerByUserID = async (req, res, userId) => {
   }
 };
 
-export const deletePostByIdController = async (req, res, id) => {
+export const deletePostByIdController = async (req, res, id, userId) => {
   try {
-    await deletePostByIdService(id);
+    const post = await deletePostByIdService(id, userId);
+
+    if (!post) {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ message: "Post not found or not owned by you" }));
+      return;
+    }
 
     res.statusCode = 200;
 

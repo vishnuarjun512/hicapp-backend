@@ -89,10 +89,10 @@ export const createPostService = async (
   }
 };
 
-export const deletePostByIdService = async (id) => {
+export const deletePostByIdService = async (id, userId) => {
   try {
-    const query = `DELETE FROM posts WHERE id=$1 RETURNING *`;
-    const result = await pool.query(query, [id]);
+    const query = `DELETE FROM posts WHERE id=$1 AND user_id=$2 RETURNING *`;
+    const result = await pool.query(query, [id, userId]);
     return result.rows[0];
   } catch (error) {
     console.log("DELETE POST SERVICE ERROR - ", error);

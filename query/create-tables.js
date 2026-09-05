@@ -124,6 +124,8 @@ export const createMessagesTableQuery = `
     conversation_id UUID NOT NULL,
     sender_id UUID NOT NULL,
 
+    content TEXT NOT NULL,
+
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     read_at TIMESTAMPTZ,
 

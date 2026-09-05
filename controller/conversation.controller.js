@@ -28,11 +28,11 @@ export const getConversations = async (req, res, userId) => {
   }
 };
 
-export const createConversation = async (req, res) => {
+export const createConversation = async (req, res, userId) => {
   try {
-    const { user_id, otherUserId } = await BodyReader(req);
+    const { otherUserId } = await BodyReader(req);
 
-    const conversation = await createConversationService(user_id, otherUserId);
+    const conversation = await createConversationService(userId, otherUserId);
 
     res.statusCode = 201;
 

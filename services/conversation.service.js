@@ -21,7 +21,7 @@ export const createConversationService = async (userId, otherUserId) => {
     // Check whether a conversation already exists
     const existingConversationQuery = `
       SELECT c.id
-      FROM conversations c
+      FROM conversation c
       JOIN conversation_participants cp1
         ON c.id = cp1.conversation_id
       JOIN conversation_participants cp2
@@ -43,7 +43,7 @@ export const createConversationService = async (userId, otherUserId) => {
 
     // Create conversation
     const conversationQuery = `
-      INSERT INTO conversations
+      INSERT INTO conversation
       DEFAULT VALUES
       RETURNING id, created_at, updated_at;
     `;
@@ -92,7 +92,7 @@ export const getConversationsService = async (userId) => {
           END
         ) AS unread_count
 
-      FROM conversations c
+      FROM conversation c
 
       JOIN conversation_participants cp
         ON c.id = cp.conversation_id

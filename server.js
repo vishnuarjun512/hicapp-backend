@@ -9,6 +9,11 @@ import { conversationRoutes } from "./routes/conversation.route.js";
 dotenv.config();
 const PORT = process.env.PORT;
 
+if (!process.env.JWT_SECRET) {
+  console.error("JWT_SECRET must be configured before the server can start.");
+  process.exit(1);
+}
+
 const server = http.createServer((req, res) => {
   // CORS headers
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");

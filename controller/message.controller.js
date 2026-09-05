@@ -7,10 +7,7 @@ import { BodyReader } from "../utils/dataReader.js";
 
 export const getMessages = async (req, res, conversationId) => {
   try {
-    const data = await BodyReader(req);
-    const { userId } = data;
-
-    const messages = await getMessagesService(conversationId, userId);
+    const messages = await getMessagesService(conversationId, req.auth.userId);
 
     res.statusCode = 200;
 
@@ -34,7 +31,7 @@ export const getMessages = async (req, res, conversationId) => {
 
 export const createMessage = async (req, res, conversationId) => {
   try {
-    const { userId, content } = await BodyReader(req);
+    const { content } = await BodyReader(req);
 
     if (!content || !content.trim()) {
       res.statusCode = 400;
@@ -50,7 +47,7 @@ export const createMessage = async (req, res, conversationId) => {
 
     const message = await createMessageService(
       conversationId,
-      userId,
+      req.auth.userId,
       content.trim(),
     );
 

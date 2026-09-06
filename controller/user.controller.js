@@ -12,6 +12,7 @@ import {
 } from "../services/follow.service.js";
 import { getPostsByUserIdService } from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
+import jwt from "jsonwebtoken";
 
 export const getUsersController = async (req, res) => {
   try {
@@ -108,7 +109,15 @@ export const signInUser = async (req, res) => {
       if (password == user.password) {
         console.log(user.email, " has logged in");
 
-        res.statusCode = 200;
+        const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+          expiresIn: "1h",
+        });
+
+        res.writeHead(200, {
+          "Content-Type": "application/json",
+          "Set-Cookie": `hicappToken=${token}; HttpOnly; Path=/`,
+        });
+
         res.end(
           JSON.stringify({
             message: "Sign In Success",

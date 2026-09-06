@@ -3,10 +3,23 @@ import {
   getConversationsService,
 } from "../services/conversation.service.js";
 import { BodyReader } from "../utils/dataReader.js";
+import { readJWT, verifyToken } from "../utils/jwt.js";
 
-export const getConversations = async (req, res, userId) => {
+export const getConversations = async (req, res) => {
   try {
-    const conversations = await getConversationsService(userId);
+    const user = verifyToken(req);
+
+    if (!user) {
+      res.statusCode = 401;
+      res.end(
+        JSON.stringify({
+          message: "Authentication required",
+        }),
+      );
+      return;
+    }
+
+    const conversations = await getConversationsService(user.userId);
 
     res.statusCode = 200;
 
@@ -30,9 +43,10 @@ export const getConversations = async (req, res, userId) => {
 
 export const createConversation = async (req, res) => {
   try {
-    const { user_id, otherUserId } = await BodyReader(req);
+    const { userId } = verifyToken(req);
+    const { otherUserId } = await BodyReader(req);
 
-    const conversation = await createConversationService(user_id, otherUserId);
+    const conversation = await createConversationService(userId, otherUserId);
 
     res.statusCode = 201;
 

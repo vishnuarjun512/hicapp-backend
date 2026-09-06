@@ -40,8 +40,7 @@ export const conversationRoutes = (req, res) => {
   }
 
   if (req.method == "GET" && req.url.startsWith("/api/conversation")) {
-    const userId = req.url.split("/").pop();
-    getConversations(req, res, userId);
+    getConversations(req, res);
     return true;
   }
 

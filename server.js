@@ -17,6 +17,7 @@ const server = http.createServer((req, res) => {
     "GET, POST, PUT, PATCH, DELETE, OPTIONS",
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Credentials", "true");
 
   if (req.method === "OPTIONS") {
     res.statusCode = 204;

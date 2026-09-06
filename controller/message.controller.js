@@ -4,13 +4,22 @@ import {
 } from "../services/message.service.js";
 
 import { BodyReader } from "../utils/dataReader.js";
+import { verifyToken } from "../utils/jwt.js";
 
 export const getMessages = async (req, res, conversationId) => {
   try {
-    const data = await BodyReader(req);
-    const { userId } = data;
+    const user = verifyToken(req);
+    if (!user) {
+      res.statusCode = 401;
+      res.end(
+        JSON.stringify({
+          message: "Authentication required",
+        }),
+      );
+      return;
+    }
 
-    const messages = await getMessagesService(conversationId, userId);
+    const messages = await getMessagesService(conversationId, user.userId);
 
     res.statusCode = 200;
 
@@ -34,7 +43,18 @@ export const getMessages = async (req, res, conversationId) => {
 
 export const createMessage = async (req, res, conversationId) => {
   try {
-    const { userId, content } = await BodyReader(req);
+    const user = verifyToken(req);
+    if (!user) {
+      res.statusCode = 401;
+      res.end(
+        JSON.stringify({
+          message: "Authentication required",
+        }),
+      );
+      return;
+    }
+
+    const { content } = await BodyReader(req);
 
     if (!content || !content.trim()) {
       res.statusCode = 400;
@@ -50,7 +70,7 @@ export const createMessage = async (req, res, conversationId) => {
 
     const message = await createMessageService(
       conversationId,
-      userId,
+      user.userId,
       content.trim(),
     );
 

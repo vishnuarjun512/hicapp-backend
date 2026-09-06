@@ -3,7 +3,7 @@ import {
   getConversationsService,
 } from "../services/conversation.service.js";
 import { BodyReader } from "../utils/dataReader.js";
-import { readJWT, verifyToken } from "../utils/jwt.js";
+import { verifyToken } from "../utils/jwt.js";
 
 export const getConversations = async (req, res) => {
   try {

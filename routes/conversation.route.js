@@ -34,19 +34,9 @@ import {
 } from "../controller/message.controller.js";
 
 export const conversationRoutes = (req, res) => {
-  if (req.method === "POST" && req.url.startsWith("/api/conversation")) {
-    createConversation(req, res);
-    return true;
-  }
-
-  if (req.method == "GET" && req.url.startsWith("/api/conversation")) {
-    getConversations(req, res);
-    return true;
-  }
-
   if (
     req.method == "GET" &&
-    req.url.startsWith("/api/conversation") &&
+    req.url.startsWith("/api/conversations") &&
     req.url.endsWith("/messages")
   ) {
     const parts = req.url.split("/");
@@ -63,6 +53,16 @@ export const conversationRoutes = (req, res) => {
     const parts = req.url.split("/");
     const conversationId = parts[3];
     createMessage(req, res, conversationId);
+    return true;
+  }
+
+  if (req.method === "POST" && req.url.startsWith("/api/conversation")) {
+    createConversation(req, res);
+    return true;
+  }
+
+  if (req.method == "GET" && req.url.startsWith("/api/conversation")) {
+    getConversations(req, res);
     return true;
   }
 

@@ -117,7 +117,40 @@ export const createMessageService = async (
       throw new Error("User is not a participant in this conversation");
     }
 
-    return result.rows[0];
+    const message = result.rows[0];
+
+    // Get sender information
+    const senderQuery = `
+      SELECT
+        id,
+        name,
+        handle,
+        "profile_pic_url"
+      FROM users
+      WHERE id = $1;
+    `;
+
+    const senderResult = await pool.query(senderQuery, [senderId]);
+    const sender = senderResult.rows[0];
+
+    return {
+      id: message.id,
+
+      conversationId: message.conversation_id,
+
+      sender: {
+        id: sender.id,
+        name: sender.name,
+        handle: sender.handle,
+        profilePic: sender.profile_pic_url,
+      },
+
+      content: message.content,
+
+      createdAt: message.created_at,
+
+      readAt: message.read_at,
+    };
   } catch (error) {
     console.log("CREATE MESSAGE SERVICE ERROR - ", error);
 

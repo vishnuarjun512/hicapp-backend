@@ -1,5 +1,4 @@
 import pool from "../config/db.js";
-import { createUsersTableQuery } from "../query/create-tables.js";
 
 export async function createUserService(email, password) {
   try {
@@ -16,6 +15,40 @@ export async function createUserService(email, password) {
   } catch (error) {
     throw new Error("CREATE USER SERVICE ERROR - ", error);
   }
+}
+
+export const getUserByIdService = async (id) => {
+  const query = `SELECT * 
+  FROM users
+  WHERE id=$1`;
+  const result = await pool.query(query, [id]);
+  return result.rows[0];
+};
+
+export const editProfileService = async (
+  id,
+  name,
+  handle,
+  bio,
+  verified = false,
+) => {
+  const query = `UPDATE users
+  SET name=$2, handle=$3, bio=$4 , verified=$5
+  WHERE id=$1`;
+
+  await pool.query(query, [id, name, handle, bio, verified]);
+};
+
+export async function deleteUserByEmailService(email) {
+  const result = await pool.query(
+    `
+      DELETE FROM users
+      WHERE email = $1
+      RETURNING id, name, email, created_at;
+    `,
+    [email],
+  );
+  return result.rows[0];
 }
 
 export async function getAllUsersService() {
@@ -36,40 +69,6 @@ export const getUserByEmailService = async (email) => {
   return result.rows[0];
 };
 
-export const getUserByIdService = async (id) => {
-  const query = `SELECT * 
-  FROM users
-  WHERE id=$1`;
-  const result = await pool.query(query, [id]);
-  return result.rows[0];
-};
-
-export async function deleteUserByEmailService(email) {
-  const result = await pool.query(
-    `
-      DELETE FROM users
-      WHERE email = $1
-      RETURNING id, name, email, created_at;
-    `,
-    [email],
-  );
-  return result.rows[0];
-}
-
-export const editProfileService = async (
-  id,
-  name,
-  handle,
-  bio,
-  verified = false,
-) => {
-  const query = `UPDATE users
-  SET name=$2, handle=$3, bio=$4 , verified=$5
-  WHERE id=$1`;
-
-  await pool.query(query, [id, name, handle, bio, verified]);
-};
-
 export const toggleIsPrivateService = async (id, is_private) => {
   const query = `
     UPDATE users
@@ -79,19 +78,3 @@ export const toggleIsPrivateService = async (id, is_private) => {
 
   await pool.query(query, [id, is_private]);
 };
-
-export const createUsersTableService = async () => {
-  try {
-    await pool.query(createUsersTableQuery);
-
-    console.log("✅ Users table created");
-  } catch (error) {
-    console.error("❌ Failed to create users table:", error);
-  }
-};
-
-export async function deleteUsersTableService() {
-  await pool.query(`
-    DROP TABLE IF EXISTS users;
-  `);
-}

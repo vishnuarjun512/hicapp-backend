@@ -8,7 +8,6 @@ import { verifyToken } from "../utils/jwt.js";
 export const getConversations = async (req, res) => {
   try {
     const user = verifyToken(req);
-
     if (!user) {
       res.statusCode = 401;
       res.end(

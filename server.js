@@ -5,6 +5,7 @@ import { userRoutes } from "./routes/user.route.js";
 import { postRoutes } from "./routes/post.route.js";
 import { followRoutes } from "./routes/follow.route.js";
 import { conversationRoutes } from "./routes/conversation.route.js";
+import { authRoutes } from "./routes/auth.route.js";
 
 dotenv.config();
 const PORT = process.env.PORT;
@@ -26,6 +27,11 @@ const server = http.createServer((req, res) => {
   }
 
   res.setHeader("Content-Type", "application/json");
+
+  const authRoutesHandled = authRoutes(req, res);
+  if (authRoutesHandled) {
+    return;
+  }
 
   const userRouteshandled = userRoutes(req, res);
   if (userRouteshandled) {

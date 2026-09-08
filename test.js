@@ -1,10 +1,7 @@
 import readline from "readline";
 import pool from "./config/db.js";
-import {
-  createUsersTableService,
-  deleteUsersTableService,
-  getAllUsersService,
-} from "./services/user.service.js";
+import { getAllUsersService } from "./services/user.service.js";
+import { createUsersTableService } from "./services/table.service.js";
 import {
   createPostService,
   createPostTableService,
@@ -93,8 +90,6 @@ async function main() {
             break;
           }
 
-          await deleteUsersTableService();
-
           console.log("🗑️ Users table deleted.");
           break;
         }
@@ -130,6 +125,15 @@ async function main() {
           rl.close();
           await pool.end();
           return;
+
+        case "8":
+          let query = `
+          ALTER TABLE conversation_participants
+          ADD COLUMN last_read_at TIMESTAMPTZ;
+          `;
+          const result = await pool.query(query);
+          console.log("Command Executed Done");
+          break;
 
         // --------------------------------
         // INVALID

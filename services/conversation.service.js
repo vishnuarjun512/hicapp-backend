@@ -86,8 +86,8 @@ export const getConversationsService = async (userId) => {
 
         COUNT(
           CASE
-            WHEN lm.sender_id <> $1
-            AND lm.read_at IS NULL
+            WHEN m.sender_id <> $1
+            AND m.created_at > COALESCE(cp.last_read_at, 'epoch')
             THEN 1
           END
         ) AS unread_count
@@ -96,6 +96,7 @@ export const getConversationsService = async (userId) => {
 
       JOIN conversation_participants cp
         ON c.id = cp.conversation_id
+        AND cp.user_id = $1
 
       JOIN conversation_participants other_cp
         ON c.id = other_cp.conversation_id
@@ -108,15 +109,15 @@ export const getConversationsService = async (userId) => {
         SELECT
           m.content,
           m.sender_id,
-          m.created_at,
-          m.read_at
+          m.created_at
         FROM messages m
         WHERE m.conversation_id = c.id
         ORDER BY m.created_at DESC
         LIMIT 1
       ) lm ON true
 
-      WHERE cp.user_id = $1
+      LEFT JOIN messages m
+        ON m.conversation_id = c.id
 
       GROUP BY
         c.id,
@@ -125,9 +126,8 @@ export const getConversationsService = async (userId) => {
         u.handle,
         u."profile_pic_url",
         lm.content,
-        lm.sender_id,
         lm.created_at,
-        lm.read_at
+        cp.last_read_at
 
       ORDER BY lm.created_at DESC NULLS LAST;
     `;

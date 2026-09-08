@@ -158,6 +158,34 @@ export const createMessageService = async (
   }
 };
 
+export const getConversationParticipantsService = async (conversationId) => {
+  const result = await pool.query(
+    `
+      SELECT user_id
+      FROM conversation_participants
+      WHERE conversation_id = $1
+    `,
+    [conversationId],
+  );
+
+  return result.rows;
+};
+
+export const markConversationReadService = async (conversationId, userId) => {
+  const result = await pool.query(
+    `
+      UPDATE conversation_participants
+      SET last_read_at = NOW()
+      WHERE conversation_id = $1
+      AND user_id = $2
+      RETURNING *
+    `,
+    [conversationId, userId],
+  );
+
+  return result.rows[0];
+};
+
 /*
   Now your frontend gets exactly:
 

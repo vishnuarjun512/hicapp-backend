@@ -100,6 +100,7 @@ export const createConversationParticipantsTableQuery = `
 
     conversation_id UUID NOT NULL,
     user_id UUID NOT NULL,
+    read_at TIMESTAMPTZ DEFAULT NOW(),
 
     joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 

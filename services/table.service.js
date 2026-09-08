@@ -1,4 +1,4 @@
-import { createUsersTableQuery } from "../query/create-tables";
+import { createUsersTableQuery } from "../query/create-tables.js";
 
 export const createUsersTableService = async () => {
   try {

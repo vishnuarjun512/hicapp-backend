@@ -2,7 +2,12 @@ import { WebSocketServer } from "ws";
 import { readJWT, getTokenFromCookie } from "./utils/jwt.js";
 import { randomUUID } from "crypto";
 
-import { createMessageService } from "./services/message.service.js";
+import {
+  createMessageService,
+  getConversationParticipantsService,
+  markConversationReadService,
+} from "./services/message.service.js";
+
 export const setupWebSocket = (server) => {
   const wss = new WebSocketServer({
     noServer: true,
@@ -87,7 +92,53 @@ export const setupWebSocket = (server) => {
             content,
           );
 
-          console.log("💾 Message saved:", newMessage);
+          const participants =
+            await getConversationParticipantsService(conversationId);
+
+          console.log("👥 Participants:", participants);
+
+          for (const participant of participants) {
+            const userId = participant.user_id;
+
+            // Don't send it back to the sender here
+            if (userId === ws.userId) {
+              continue;
+            }
+
+            const userSockets = connectedUsers.get(userId);
+
+            if (!userSockets) {
+              continue;
+            }
+
+            for (const socket of userSockets) {
+              if (socket.readyState === socket.OPEN) {
+                socket.send(
+                  JSON.stringify({
+                    type: "message:new",
+                    message: newMessage,
+                  }),
+                );
+              }
+            }
+          }
+
+          // Send the saved message back to sender
+          ws.send(
+            JSON.stringify({
+              type: "message:new",
+              message: newMessage,
+            }),
+          );
+        }
+
+        if (message.type == "conversation:read") {
+          const { conversationId } = message;
+          await markConversationReadService(conversationId, ws.userId);
+
+          console.log(
+            `👀 User ${ws.userId} read conversation ${conversationId}`,
+          );
         }
       } catch (error) {
         console.log("❌ WebSocket message error:", error);

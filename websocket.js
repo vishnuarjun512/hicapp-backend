@@ -1,6 +1,8 @@
 import { WebSocketServer } from "ws";
 import { readJWT, getTokenFromCookie } from "./utils/jwt.js";
+import { randomUUID } from "crypto";
 
+import { createMessageService } from "./services/message.service.js";
 export const setupWebSocket = (server) => {
   const wss = new WebSocketServer({
     noServer: true,
@@ -15,8 +17,12 @@ export const setupWebSocket = (server) => {
   });
 
   wss.on("connection", (ws, req) => {
-    console.log("WebSock Client Connected");
+    const socketId = randomUUID();
 
+    ws.socketId = socketId;
+
+    console.log("WebSock Client Connected");
+    console.log("Socket ID:", socketId);
     try {
       // Get access token from cookie
       const token = getTokenFromCookie(req);
@@ -43,13 +49,15 @@ export const setupWebSocket = (server) => {
       connectedUsers.get(ws.userId).add(ws);
 
       console.log("🔐 WebSocket authenticated");
+
       console.log(
         "Connected Users ->",
         [...connectedUsers.entries()].map(([userId, sockets]) => ({
           userId,
-          socketIds: [...sockets].map((socket) => socket.id),
+          socketIds: [...sockets].map((socket) => socket.socketId),
         })),
       );
+
       ws.send(
         JSON.stringify({
           type: "connected",
@@ -64,8 +72,26 @@ export const setupWebSocket = (server) => {
       return;
     }
 
-    ws.on("message", (data) => {
-      console.log("📨 Message:", data.toString());
+    ws.on("message", async (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+
+        console.log("📨 WebSocket event:", message);
+
+        if (message.type === "message:send") {
+          const { conversationId, content } = message;
+
+          const newMessage = await createMessageService(
+            conversationId,
+            ws.userId,
+            content,
+          );
+
+          console.log("💾 Message saved:", newMessage);
+        }
+      } catch (error) {
+        console.log("❌ WebSocket message error:", error);
+      }
     });
 
     ws.on("close", () => {

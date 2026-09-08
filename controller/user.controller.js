@@ -12,7 +12,8 @@ import {
 } from "../services/follow.service.js";
 import { getPostsByUserIdService } from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
-import jwt from "jsonwebtoken";
+
+import { getConversationsService } from "../services/conversation.service.js";
 
 export const getUsersController = async (req, res) => {
   try {
@@ -126,6 +127,7 @@ export const getProfileData = async (req, res, userId) => {
     const followers = await getFollowersService(user.id);
     const following = await getFollowingService(user.id);
     const posts = await getPostsByUserIdService(user.id);
+    const conversations = await getConversationsService(user.id);
 
     res.statusCode = 200;
     res.end(
@@ -133,6 +135,7 @@ export const getProfileData = async (req, res, userId) => {
         followers,
         following,
         posts,
+        conversations,
       }),
     );
   } catch (error) {

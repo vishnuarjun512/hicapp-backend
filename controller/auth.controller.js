@@ -47,8 +47,8 @@ export const signInUser = async (req, res) => {
     res.writeHead(200, {
       "Content-Type": "application/json",
       "Set-Cookie": [
-        `hicappAccessToken=${accesstoken}; HttpOnly; Path=/`,
-        `hicappRefreshToken=${refreshToken}; HttpOnly; Path=/`,
+        `hicappAccessToken=${accesstoken}; HttpOnly; Secure; SameSite=None; Path=/`,
+        `hicappRefreshToken=${refreshToken}; HttpOnly; Secure; SameSite=None; Path=/`,
       ],
     });
 

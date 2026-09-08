@@ -6,7 +6,7 @@ import { postRoutes } from "./routes/post.route.js";
 import { followRoutes } from "./routes/follow.route.js";
 import { conversationRoutes } from "./routes/conversation.route.js";
 import { authRoutes } from "./routes/auth.route.js";
-
+import { setupWebSocket } from "./websocket.js";
 dotenv.config();
 const PORT = process.env.PORT;
 
@@ -78,6 +78,7 @@ async function startServer() {
     await pool.query("SELECT 1");
     console.log("POSTGRESQL Connected");
 
+    setupWebSocket(server);
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });

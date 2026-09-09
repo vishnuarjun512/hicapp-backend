@@ -36,7 +36,7 @@ export const signInUser = async (req, res) => {
 
     console.log(user.email, " has logged in");
 
-    const accesstoken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+    const accessToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
       expiresIn: "5m",
     });
 
@@ -44,18 +44,12 @@ export const signInUser = async (req, res) => {
       expiresIn: "10m",
     });
 
-    res.writeHead(200, {
-      "Content-Type": "application/json",
-      "Set-Cookie": [
-        `hicappAccessToken=${accesstoken}; HttpOnly; Secure; SameSite=None; Path=/`,
-        `hicappRefreshToken=${refreshToken}; HttpOnly; Secure; SameSite=None; Path=/`,
-      ],
-    });
-
     res.end(
       JSON.stringify({
         message: "Sign In Success",
         user,
+        accessToken,
+        refreshToken,
       }),
     );
 

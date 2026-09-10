@@ -76,10 +76,18 @@ export const getConversationsService = async (userId) => {
       SELECT
         c.id AS conversation_id,
 
-        u.id AS user_id,
-        u.name AS user_name,
-        u.handle AS user_handle,
-        u."profile_pic_url" AS user_profile_pic,
+        COALESCE(
+          JSON_AGG(
+            DISTINCT JSONB_BUILD_OBJECT(
+              'id', u.id,
+              'name', u.name,
+              'handle', u.handle,
+              'profilePic', u."profile_pic_url",
+              'lastReadAt', cp_all.last_read_at
+            )
+          ) FILTER (WHERE u.id IS NOT NULL),
+          '[]'
+        ) AS participants,
 
         lm.content AS last_message,
         lm.created_at AS last_message_at,
@@ -94,17 +102,20 @@ export const getConversationsService = async (userId) => {
 
       FROM conversation c
 
+      -- Current user's participant row
       JOIN conversation_participants cp
         ON c.id = cp.conversation_id
         AND cp.user_id = $1
 
-      JOIN conversation_participants other_cp
-        ON c.id = other_cp.conversation_id
-        AND other_cp.user_id <> $1
+      -- All participants in the conversation
+      LEFT JOIN conversation_participants cp_all
+        ON c.id = cp_all.conversation_id
 
-      JOIN users u
-        ON u.id = other_cp.user_id
+      -- User information for every participant
+      LEFT JOIN users u
+        ON u.id = cp_all.user_id
 
+      -- Latest message
       LEFT JOIN LATERAL (
         SELECT
           m.content,
@@ -116,15 +127,12 @@ export const getConversationsService = async (userId) => {
         LIMIT 1
       ) lm ON true
 
+      -- All messages for unread count
       LEFT JOIN messages m
         ON m.conversation_id = c.id
 
       GROUP BY
         c.id,
-        u.id,
-        u.name,
-        u.handle,
-        u."profile_pic_url",
         lm.content,
         lm.created_at,
         cp.last_read_at
@@ -137,12 +145,7 @@ export const getConversationsService = async (userId) => {
     return result.rows.map((row) => ({
       id: row.conversation_id,
 
-      user: {
-        id: row.user_id,
-        name: row.user_name,
-        handle: row.user_handle,
-        profilePic: row.user_profile_pic,
-      },
+      participants: row.participants,
 
       preview: row.last_message ?? "",
       unread: Number(row.unread_count),
@@ -157,37 +160,30 @@ export const getConversationsService = async (userId) => {
 };
 
 /*
-  The raw SQL result might look like:
+Now a conversation will come back like:
 
-  {
-    conversation_id: "abc-123",
-    user_id: "rahul-id",
-    user_name: "Rahul",
-    user_handle: "rahul",
-    user_profile_pic: "...",
-    last_message: "Are you free tomorrow?",
-    last_message_at: "...",
-    unread_count: "2"
-  }
+{
+  "id": "conversation-id",
 
-  But your frontend shouldn't need to know about that SQL structure.
-
-  The service converts it to:
-
-  {
-    id: "abc-123",
-
-    user: {
-      id: "rahul-id",
-      name: "Rahul",
-      handle: "rahul",
-      profilePic: "..."
+  "participants": [
+    {
+      "id": "your-user-id",
+      "name": "Vishnu",
+      "handle": "vishnu",
+      "profilePic": null,
+      "lastReadAt": "2026-09-11T03:20:00.000Z"
     },
+    {
+      "id": "rahul-user-id",
+      "name": "Rahul",
+      "handle": "rahul",
+      "profilePic": null,
+      "lastReadAt": "2026-09-11T03:25:00.000Z"
+    }
+  ],
 
-    preview: "Are you free tomorrow?",
-    unread: 2,
-    lastMessageAt: "..."
-  }
-
-  Exactly what your ConversationList wants.
+  "preview": "Hey bro",
+  "unread": 0,
+  "lastMessageAt": "2026-09-11T03:26:00.000Z"
+}
 */

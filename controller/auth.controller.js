@@ -25,7 +25,7 @@ export const signInUser = async (req, res) => {
 
     if (password != user.password) {
       console.log("Credentials Dont Match");
-      res.statusCode = 400;
+      res.statusCode = 401;
       res.end(
         JSON.stringify({
           message: "Credentials Dont Match",
@@ -70,6 +70,17 @@ export const registerUser = async (req, res) => {
     const data = await BodyReader(req);
 
     const { email, password } = data;
+
+    const checkUser = await getUserByEmailService(email);
+    if (checkUser) {
+      res.statusCode = 409;
+      res.end(
+        JSON.stringify({
+          message: "User already registered!",
+        }),
+      );
+      return;
+    }
 
     createUserService(email, password).then((data) => {
       res.statusCode = 200;

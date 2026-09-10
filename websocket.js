@@ -134,7 +134,35 @@ export const setupWebSocket = (server) => {
 
         if (message.type == "conversation:read") {
           const { conversationId } = message;
-          await markConversationReadService(conversationId, ws.userId);
+          const participants = await markConversationReadService(
+            conversationId,
+            ws.userId,
+          );
+
+          for (const participant of participants) {
+            const participantID = participant.user_id;
+
+            // Don't send it back to the sender here
+            if (participantID === ws.userId) {
+              continue;
+            }
+
+            const userSockets = connectedUsers.get(participantID);
+
+            if (!userSockets) {
+              continue;
+            }
+
+            for (const socket of userSockets) {
+              if (socket.readyState === socket.OPEN) {
+                socket.send(
+                  JSON.stringify({
+                    type: "message:read",
+                  }),
+                );
+              }
+            }
+          }
 
           console.log(
             `👀 User ${ws.userId} read conversation ${conversationId}`,

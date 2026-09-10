@@ -183,7 +183,7 @@ export const markConversationReadService = async (conversationId, userId) => {
     [conversationId, userId],
   );
 
-  return result.rows[0];
+  return result.rows;
 };
 
 /*

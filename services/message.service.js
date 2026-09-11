@@ -172,18 +172,24 @@ export const getConversationParticipantsService = async (conversationId) => {
 };
 
 export const markConversationReadService = async (conversationId, userId) => {
-  const result = await pool.query(
-    `
-      UPDATE conversation_participants
-      SET last_read_at = NOW()
-      WHERE conversation_id = $1
+  const query = `
+    UPDATE conversation_participants
+    SET last_read_at = NOW()
+    WHERE conversation_id = $1
       AND user_id = $2
-      RETURNING *
-    `,
-    [conversationId, userId],
-  );
+    RETURNING
+      conversation_id,
+      user_id,
+      last_read_at;
+  `;
 
-  return result.rows;
+  const result = await pool.query(query, [conversationId, userId]);
+
+  if (result.rowCount === 0) {
+    throw new Error("User is not a participant in this conversation");
+  }
+
+  return result.rows[0];
 };
 
 /*

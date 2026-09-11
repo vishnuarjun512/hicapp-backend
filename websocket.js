@@ -7,13 +7,13 @@ import {
   getConversationParticipantsService,
   markConversationReadService,
 } from "./services/message.service.js";
+import { websocket_Message_Switch } from "./ws.message.js";
+const connectedUsers = new Map();
 
 export const setupWebSocket = (server) => {
   const wss = new WebSocketServer({
     noServer: true,
   });
-
-  const connectedUsers = new Map();
 
   server.on("upgrade", (request, socket, head) => {
     wss.handleUpgrade(request, socket, head, (ws) => {
@@ -28,6 +28,7 @@ export const setupWebSocket = (server) => {
 
     console.log("WebSock Client Connected");
     console.log("Socket ID:", socketId);
+
     try {
       // Get access token from cookie
       const token = getTokenFromCookie(req);
@@ -53,15 +54,7 @@ export const setupWebSocket = (server) => {
 
       connectedUsers.get(ws.userId).add(ws);
 
-      console.log("🔐 WebSocket authenticated");
-
-      console.log(
-        "Connected Users ->",
-        [...connectedUsers.entries()].map(([userId, sockets]) => ({
-          userId,
-          socketIds: [...sockets].map((socket) => socket.socketId),
-        })),
-      );
+      console.log("🔐WebSocket authenticated");
 
       ws.send(
         JSON.stringify({
@@ -83,91 +76,7 @@ export const setupWebSocket = (server) => {
 
         console.log("📨 WebSocket event:", message);
 
-        if (message.type === "message:send") {
-          const { conversationId, content } = message;
-
-          const newMessage = await createMessageService(
-            conversationId,
-            ws.userId,
-            content,
-          );
-
-          const participants =
-            await getConversationParticipantsService(conversationId);
-
-          console.log("👥 Participants:", participants);
-
-          for (const participant of participants) {
-            const userId = participant.user_id;
-
-            // Don't send it back to the sender here
-            if (userId === ws.userId) {
-              continue;
-            }
-
-            const userSockets = connectedUsers.get(userId);
-
-            if (!userSockets) {
-              continue;
-            }
-
-            for (const socket of userSockets) {
-              if (socket.readyState === socket.OPEN) {
-                socket.send(
-                  JSON.stringify({
-                    type: "message:new",
-                    message: newMessage,
-                  }),
-                );
-              }
-            }
-          }
-
-          // Send the saved message back to sender
-          ws.send(
-            JSON.stringify({
-              type: "message:new",
-              message: newMessage,
-            }),
-          );
-        }
-
-        if (message.type == "conversation:read") {
-          const { conversationId } = message;
-          const participants = await markConversationReadService(
-            conversationId,
-            ws.userId,
-          );
-
-          for (const participant of participants) {
-            const participantID = participant.user_id;
-
-            // Don't send it back to the sender here
-            if (participantID === ws.userId) {
-              continue;
-            }
-
-            const userSockets = connectedUsers.get(participantID);
-
-            if (!userSockets) {
-              continue;
-            }
-
-            for (const socket of userSockets) {
-              if (socket.readyState === socket.OPEN) {
-                socket.send(
-                  JSON.stringify({
-                    type: "message:read",
-                  }),
-                );
-              }
-            }
-          }
-
-          console.log(
-            `👀 User ${ws.userId} read conversation ${conversationId}`,
-          );
-        }
+        await websocket_Message_Switch(ws, connectedUsers, message);
       } catch (error) {
         console.log("❌ WebSocket message error:", error);
       }
@@ -197,4 +106,14 @@ export const setupWebSocket = (server) => {
   });
 
   console.log("WebSocket server initialized");
+};
+
+export const printUsers = () => {
+  console.log(
+    "Connected Users ->",
+    [...connectedUsers.entries()].map(([userId, sockets]) => ({
+      userId,
+      socketIds: [...sockets].map((socket) => socket.socketId),
+    })),
+  );
 };

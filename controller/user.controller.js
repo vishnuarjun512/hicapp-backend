@@ -14,6 +14,7 @@ import { getPostsByUserIdService } from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 
 import { getConversationsService } from "../services/conversation.service.js";
+import { requireAuthenticatedUser } from "../utils/jwt.js";
 
 export const getUsersController = async (req, res) => {
   try {
@@ -72,6 +73,12 @@ export const getUserById = async (req, res, id) => {
 
 export const editProfile = async (req, res, id) => {
   try {
+    const { userId } = requireAuthenticatedUser(req);
+    if (userId !== id) {
+      res.statusCode = 403;
+      res.end(JSON.stringify({ message: "You can only edit your own profile" }));
+      return;
+    }
     const data = await BodyReader(req);
     const { name, handle, bio, verified } = data;
 
@@ -96,18 +103,26 @@ export const editProfile = async (req, res, id) => {
 
 export const togglePrivate = async (req, res, id) => {
   try {
+    const { userId } = requireAuthenticatedUser(req);
+    if (userId !== id) {
+      res.statusCode = 403;
+      res.end(JSON.stringify({ message: "You can only change your own privacy setting" }));
+      return;
+    }
     const data = await BodyReader(req);
     const { is_private } = data;
-    await toggleIsPrivateService(id, is_private).then(() => {
-      res.statusCode = 200;
-      res.end(
-        JSON.stringify({
-          message: `Switched to ${is_private ? "Private" : "Public"} Account`,
-        }),
-      );
-    });
+    if (typeof is_private !== "boolean") {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ message: "is_private must be a boolean" }));
+      return;
+    }
+    await toggleIsPrivateService(id, is_private);
+    res.statusCode = 200;
+    res.end(JSON.stringify({ message: `Switched to ${is_private ? "Private" : "Public"} Account` }));
   } catch (error) {
-    console.log("TOGGLE IS PRIVATE CONTROLLER ERROR");
+    console.log("TOGGLE IS PRIVATE CONTROLLER ERROR -", error);
+    res.statusCode = error.statusCode ?? 500;
+    res.end(JSON.stringify({ message: error.statusCode ? error.message : "Internal Server Error" }));
   }
 };
 

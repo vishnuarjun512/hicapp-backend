@@ -16,11 +16,15 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
       const { conversationId, content } = message;
 
       try {
+        if (typeof conversationId !== "string" || typeof content !== "string" || !content.trim()) {
+          throw new Error("conversationId and non-empty content are required");
+        }
+
         // 1. Save message to database
         const newMessage = await createMessageService(
           conversationId,
           ws.userId,
-          content,
+          content.trim(),
         );
 
         console.log("💾 Message saved:", newMessage);
@@ -74,6 +78,9 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
       const { conversationId } = message;
 
       try {
+        if (typeof conversationId !== "string") {
+          throw new Error("conversationId is required");
+        }
         const readState = await markConversationReadService(
           conversationId,
           ws.userId,

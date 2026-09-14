@@ -100,7 +100,7 @@ export const createConversationParticipantsTableQuery = `
 
     conversation_id UUID NOT NULL,
     user_id UUID NOT NULL,
-    read_at TIMESTAMPTZ DEFAULT NOW(),
+    last_read_at TIMESTAMPTZ DEFAULT NOW(),
 
     joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -143,6 +143,9 @@ export const createMessagesTableQuery = `
 `;
 
 export const createConversationIndexesQuery = `
+  ALTER TABLE conversation_participants
+    ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMPTZ DEFAULT NOW();
+
   CREATE INDEX IF NOT EXISTS idx_messages_conversation_created
     ON messages(conversation_id, created_at DESC);
 

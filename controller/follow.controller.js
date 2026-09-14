@@ -13,12 +13,11 @@ import {
   getFollowService,
   getSuggestedUsersService,
 } from "../services/follow.service.js";
+import { requireAuthenticatedUser } from "../utils/jwt.js";
 
 export const followUser = async (req, res, receiver_id) => {
   try {
-    const data = await BodyReader(req);
-
-    const { sender_id } = data;
+    const { userId: sender_id } = requireAuthenticatedUser(req);
 
     const receiver = await getUserByIdService(receiver_id);
 
@@ -68,9 +67,7 @@ export const followUser = async (req, res, receiver_id) => {
 
 export const unfollowUser = async (req, res, following_id) => {
   try {
-    const data = await BodyReader(req);
-
-    const { follower_id } = data;
+    const { userId: follower_id } = requireAuthenticatedUser(req);
 
     const follow = await getFollowService(follower_id, following_id);
 
@@ -109,9 +106,7 @@ export const unfollowUser = async (req, res, following_id) => {
 
 export const acceptFollowRequest = async (req, res, sender_id) => {
   try {
-    const data = await BodyReader(req);
-
-    const { receiver_id } = data;
+    const { userId: receiver_id } = requireAuthenticatedUser(req);
 
     const request = await getFollowRequestService(sender_id, receiver_id);
 
@@ -153,9 +148,7 @@ export const acceptFollowRequest = async (req, res, sender_id) => {
 
 export const rejectFollowRequest = async (req, res, sender_id) => {
   try {
-    const data = await BodyReader(req);
-
-    const { receiver_id } = data;
+    const { userId: receiver_id } = requireAuthenticatedUser(req);
 
     const request = await getFollowRequestService(sender_id, receiver_id);
 
@@ -199,6 +192,12 @@ export const getAllUsersFollowersFollowingFRSuggestedController = async (
   userId,
 ) => {
   try {
+    const { userId: authenticatedUserId } = requireAuthenticatedUser(req);
+    if (authenticatedUserId !== userId) {
+      res.statusCode = 403;
+      res.end(JSON.stringify({ message: "You can only view your own follow data" }));
+      return;
+    }
     const suggested = await getSuggestedUsersService(userId);
     const followers = await getFollowersService(userId);
     const following = await getFollowingService(userId);

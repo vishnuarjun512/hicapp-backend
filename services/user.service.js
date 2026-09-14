@@ -13,14 +13,13 @@ export async function createUserService(email, password) {
 
     return result.rows[0];
   } catch (error) {
-    throw new Error("CREATE USER SERVICE ERROR - ", error);
+    throw error;
   }
 }
 
 export const getUserByIdService = async (id) => {
-  const query = `SELECT * 
-  FROM users
-  WHERE id=$1`;
+  const query = `SELECT id, name, email, handle, verified, bio, profile_pic_url, is_private, created_at
+  FROM users WHERE id=$1`;
   const result = await pool.query(query, [id]);
   return result.rows[0];
 };
@@ -62,11 +61,23 @@ export async function getAllUsersService() {
 }
 
 export const getUserByEmailService = async (email) => {
-  const query = `SELECT * 
-  FROM users 
-  WHERE email=$1 OR name=$1`;
+  const query = `SELECT id, name, email, handle, verified, bio, profile_pic_url, is_private, created_at
+  FROM users WHERE email=$1 OR name=$1`;
   const result = await pool.query(query, [email]);
   return result.rows[0];
+};
+
+export const getUserForAuthenticationService = async (email) => {
+  const result = await pool.query(
+    `SELECT id, name, email, handle, verified, bio, profile_pic_url, is_private, created_at, password
+     FROM users WHERE email = $1 OR name = $1`,
+    [email],
+  );
+  return result.rows[0];
+};
+
+export const updateUserPasswordService = async (id, password) => {
+  await pool.query("UPDATE users SET password = $2 WHERE id = $1", [id, password]);
 };
 
 export const toggleIsPrivateService = async (id, is_private) => {

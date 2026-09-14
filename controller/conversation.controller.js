@@ -3,7 +3,7 @@ import {
   getConversationsService,
 } from "../services/conversation.service.js";
 import { BodyReader } from "../utils/dataReader.js";
-import { verifyToken } from "../utils/jwt.js";
+import { requireAuthenticatedUser, verifyToken } from "../utils/jwt.js";
 
 export const getConversations = async (req, res) => {
   try {
@@ -42,8 +42,14 @@ export const getConversations = async (req, res) => {
 
 export const createConversation = async (req, res) => {
   try {
-    const { userId } = verifyToken(req);
+    const { userId } = requireAuthenticatedUser(req);
     const { otherUserId } = await BodyReader(req);
+
+    if (typeof otherUserId !== "string" || !otherUserId) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ message: "otherUserId is required" }));
+      return;
+    }
 
     const conversation = await createConversationService(userId, otherUserId);
 
@@ -57,11 +63,11 @@ export const createConversation = async (req, res) => {
   } catch (error) {
     console.log("CREATE CONVERSATION CONTROLLER ERROR - ", error);
 
-    res.statusCode = 500;
+    res.statusCode = error.statusCode ?? 500;
 
     res.end(
       JSON.stringify({
-        message: "Internal Server Error",
+        message: error.statusCode ? error.message : "Internal Server Error",
       }),
     );
   }

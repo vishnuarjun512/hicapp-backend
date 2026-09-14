@@ -1,4 +1,5 @@
 import { createUsersTableQuery } from "../query/create-tables.js";
+import pool from "../config/db.js";
 
 export const createUsersTableService = async () => {
   try {

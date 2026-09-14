@@ -32,36 +32,34 @@ import {
   createMessage,
   getMessages,
 } from "../controller/message.controller.js";
+import { getPathname } from "../utils/http.js";
 
 export const conversationRoutes = (req, res) => {
+  const pathname = getPathname(req);
+  const messageMatch = pathname.match(/^\/api\/conversations\/([^/]+)\/messages$/);
   if (
     req.method == "GET" &&
-    req.url.startsWith("/api/conversations") &&
-    req.url.endsWith("/messages")
+    messageMatch
   ) {
-    const parts = req.url.split("/");
-    const conversationId = parts[3];
+    const [, conversationId] = messageMatch;
     getMessages(req, res, conversationId);
     return true;
   }
 
   if (
-    req.method == "POST" &&
-    req.url.startsWith("/api/conversation") &&
-    req.url.endsWith("/messages")
+    req.method == "POST" && messageMatch
   ) {
-    const parts = req.url.split("/");
-    const conversationId = parts[3];
+    const [, conversationId] = messageMatch;
     createMessage(req, res, conversationId);
     return true;
   }
 
-  if (req.method === "POST" && req.url.startsWith("/api/conversation")) {
+  if (req.method === "POST" && pathname === "/api/conversations") {
     createConversation(req, res);
     return true;
   }
 
-  if (req.method == "GET" && req.url.startsWith("/api/conversation")) {
+  if (req.method == "GET" && pathname === "/api/conversations") {
     getConversations(req, res);
     return true;
   }

@@ -15,10 +15,9 @@ export const createPostTableService = async () => {
 export const getPostByIdService = async (postId) => {
   try {
     const query = `
-        SELECT * FROM posts 
-        WHERE id=$1 
-        RETURNING 
-          id, user_id, body, visibility, location, created_at, updated_at  
+        SELECT id, user_id, body, visibility, location, created_at, updated_at
+        FROM posts
+        WHERE id=$1
       `;
 
     const post = await pool.query(query, [postId]);
@@ -86,13 +85,14 @@ export const createPostService = async (
     return post.rows[0];
   } catch (error) {
     console.log("CREATE POST SERVICE ERROR - ", error);
+    throw error;
   }
 };
 
-export const deletePostByIdService = async (id) => {
+export const deletePostByIdService = async (id, userId) => {
   try {
-    const query = `DELETE FROM posts WHERE id=$1 RETURNING *`;
-    const result = await pool.query(query, [id]);
+    const query = `DELETE FROM posts WHERE id=$1 AND user_id=$2 RETURNING *`;
+    const result = await pool.query(query, [id, userId]);
     return result.rows[0];
   } catch (error) {
     console.log("DELETE POST SERVICE ERROR - ", error);

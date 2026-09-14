@@ -5,22 +5,26 @@ import {
 } from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 import { URL } from "node:url";
+import { requireAuthenticatedUser } from "../utils/jwt.js";
 
 export const createPostController = async (req, res, userId) => {
   try {
+    const authenticatedUser = requireAuthenticatedUser(req);
+    if (authenticatedUser.userId !== userId) {
+      res.statusCode = 403;
+      res.end(JSON.stringify({ message: "You can only create posts for yourself" }));
+      return;
+    }
     const data = await BodyReader(req);
     const { body, visibility, location } = data;
-    await createPostService(userId, body, visibility, location).then((post) => {
-      console.log("Post Creation Success");
-      res.statusCode = 200;
-      res.end(
-        JSON.stringify({
-          message: "Post Created Successfully",
-          post,
-        }),
-      );
+    if (typeof body !== "string" || !body.trim()) {
+      res.statusCode = 400;
+      res.end(JSON.stringify({ message: "Post body is required" }));
       return;
-    });
+    }
+    const post = await createPostService(userId, body.trim(), visibility, location);
+    res.statusCode = 201;
+    res.end(JSON.stringify({ message: "Post Created Successfully", post }));
   } catch (error) {
     console.log("CREATE POST CONTROLLER ERROR - ", error);
     res.statusCode = 500;
@@ -59,7 +63,13 @@ export const getPostsControllerByUserID = async (req, res, userId) => {
 
 export const deletePostByIdController = async (req, res, id) => {
   try {
-    await deletePostByIdService(id);
+    const { userId } = requireAuthenticatedUser(req);
+    const post = await deletePostByIdService(id, userId);
+    if (!post) {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ message: "Post not found" }));
+      return;
+    }
 
     res.statusCode = 200;
 

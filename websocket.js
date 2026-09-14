@@ -2,12 +2,8 @@ import { WebSocketServer } from "ws";
 import { readJWT, getTokenFromCookie } from "./utils/jwt.js";
 import { randomUUID } from "crypto";
 
-import {
-  createMessageService,
-  getConversationParticipantsService,
-  markConversationReadService,
-} from "./services/message.service.js";
 import { websocket_Message_Switch } from "./ws.message.js";
+
 const connectedUsers = new Map();
 
 export const setupWebSocket = (server) => {
@@ -73,6 +69,19 @@ export const setupWebSocket = (server) => {
     ws.on("message", async (data) => {
       try {
         const message = JSON.parse(data.toString());
+        if (
+          !message ||
+          typeof message !== "object" ||
+          typeof message.type !== "string"
+        ) {
+          ws.send(
+            JSON.stringify({
+              type: "message:error",
+              message: "Invalid WebSocket event",
+            }),
+          );
+          return;
+        }
 
         console.log("📨 WebSocket event:", message);
 

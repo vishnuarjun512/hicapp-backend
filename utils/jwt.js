@@ -36,3 +36,13 @@ export const verifyToken = (req) => {
 
   return readJWT(token);
 };
+
+export const requireAuthenticatedUser = (req) => {
+  const user = verifyToken(req);
+  if (!user?.userId) {
+    const error = new Error("Authentication required");
+    error.statusCode = 401;
+    throw error;
+  }
+  return user;
+};

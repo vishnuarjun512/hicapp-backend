@@ -1,10 +1,4 @@
-export const BodyReader = async (req) => {
-  let body = "";
+import { readJsonBody } from "./http.js";
 
-  for await (const chunk of req) {
-    body += chunk;
-  }
-
-  const data = JSON.parse(body);
-  return data;
-};
+// Kept as a compatibility alias while controllers move to the shared helper.
+export const BodyReader = readJsonBody;

@@ -17,7 +17,15 @@ export const createConversationTableService = async () => {
 };
 
 export const createConversationService = async (userId, otherUserId) => {
+  if (userId === otherUserId) {
+    const error = new Error("Cannot create a conversation with yourself");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const client = await pool.connect();
   try {
+    await client.query("BEGIN");
     // Check whether a conversation already exists
     const existingConversationQuery = `
       SELECT c.id
@@ -32,12 +40,13 @@ export const createConversationService = async (userId, otherUserId) => {
       HAVING COUNT(*) = 2;
     `;
 
-    const existingConversation = await pool.query(existingConversationQuery, [
+    const existingConversation = await client.query(existingConversationQuery, [
       userId,
       otherUserId,
     ]);
 
     if (existingConversation.rows.length > 0) {
+      await client.query("COMMIT");
       return existingConversation.rows[0];
     }
 
@@ -48,7 +57,7 @@ export const createConversationService = async (userId, otherUserId) => {
       RETURNING id, created_at, updated_at;
     `;
 
-    const conversationResult = await pool.query(conversationQuery);
+    const conversationResult = await client.query(conversationQuery);
 
     const conversation = conversationResult.rows[0];
 
@@ -61,12 +70,17 @@ export const createConversationService = async (userId, otherUserId) => {
         ($1, $3);
     `;
 
-    await pool.query(participantsQuery, [conversation.id, userId, otherUserId]);
+    await client.query(participantsQuery, [conversation.id, userId, otherUserId]);
+
+    await client.query("COMMIT");
 
     return conversation;
   } catch (error) {
+    await client.query("ROLLBACK");
     console.log("CREATE CONVERSATION SERVICE ERROR - ", error);
     throw error;
+  } finally {
+    client.release();
   }
 };
 

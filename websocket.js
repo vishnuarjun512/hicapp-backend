@@ -106,7 +106,7 @@ export const setupWebSocket = (server) => {
         connectedUsers.delete(ws.userId);
       }
 
-      console.log("Connected Users ->", connectedUsers);
+      // console.log("Connected Users ->", connectedUsers);
     });
 
     ws.on("error", (error) => {

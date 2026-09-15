@@ -61,7 +61,7 @@ export const createUsersTableQuery = `
         profile_pic_url VARCHAR(255),
         is_private BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      )  
+      ) 
 `;
 
 export const createPostTableQuery = `
@@ -82,9 +82,60 @@ export const createPostTableQuery = `
           ON DELETE CASCADE,
 
         CONSTRAINT posts_visibility_check
-          CHECK (visibility IN ('public', 'friends', 'private'))
+          CHECK (visibility IN ('public', 'private'))
       );
     `;
+
+export const createLikeTableQuery = `
+  CREATE TABLE IF NOT EXISTS likes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    post_id UUID NOT NULL,
+
+    reaction VARCHAR(20),
+
+    CONSTRAINT fk_like_user
+      FOREIGN KEY (user_id)
+      REFERENCES users(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_like_post
+      FOREIGN KEY (post_id)
+      REFERENCES posts(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT unique_user_post_like
+      UNIQUE (user_id, post_id)
+  );
+`;
+
+export const createCommentTableQuery = `
+  CREATE TABLE IF NOT EXISTS comments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL,
+    post_id UUID NOT NULL,
+
+    comment TEXT NOT NULL,
+
+    CONSTRAINT fk_comment_user
+      FOREIGN KEY (user_id)
+      REFERENCES users(id)
+      ON DELETE CASCADE,
+
+    CONSTRAINT fk_comment_post
+      FOREIGN KEY (post_id)
+      REFERENCES posts(id)
+      ON DELETE CASCADE
+  );
+`;
+
+export const createIndexesForLikesAndCommentsQuery = `
+    CREATE INDEX IF NOT EXISTS idx_likes_post_id
+    ON likes(post_id);
+
+    CREATE INDEX IF NOT EXISTS idx_comments_post_id
+    ON comments(post_id);
+`;
 
 export const createConversationTableQuery = `
   CREATE TABLE IF NOT EXISTS conversation(
@@ -143,9 +194,6 @@ export const createMessagesTableQuery = `
 `;
 
 export const createConversationIndexesQuery = `
-  ALTER TABLE conversation_participants
-    ADD COLUMN IF NOT EXISTS last_read_at TIMESTAMPTZ DEFAULT NOW();
-
   CREATE INDEX IF NOT EXISTS idx_messages_conversation_created
     ON messages(conversation_id, created_at DESC);
 

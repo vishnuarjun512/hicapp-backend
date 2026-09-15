@@ -189,15 +189,19 @@ export const rejectFollowRequest = async (req, res, sender_id) => {
 export const getAllUsersFollowersFollowingFRSuggestedController = async (
   req,
   res,
-  userId,
+  id,
 ) => {
   try {
-    const { userId: authenticatedUserId } = requireAuthenticatedUser(req);
-    if (authenticatedUserId !== userId) {
+    const { userId } = requireAuthenticatedUser(req);
+
+    if (id !== userId) {
       res.statusCode = 403;
-      res.end(JSON.stringify({ message: "You can only view your own follow data" }));
+      res.end(
+        JSON.stringify({ message: "You can only view your own follow data" }),
+      );
       return;
     }
+
     const suggested = await getSuggestedUsersService(userId);
     const followers = await getFollowersService(userId);
     const following = await getFollowingService(userId);

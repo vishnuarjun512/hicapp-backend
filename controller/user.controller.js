@@ -9,8 +9,12 @@ import {
 import {
   getFollowingService,
   getFollowersService,
+  getSuggestedUsersService,
 } from "../services/follow.service.js";
-import { getPostsByUserIdService } from "../services/post.service.js";
+import {
+  getFeedPostsService,
+  getPostsByUserIdService,
+} from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 
 import { getConversationsService } from "../services/conversation.service.js";
@@ -76,7 +80,9 @@ export const editProfile = async (req, res, id) => {
     const { userId } = requireAuthenticatedUser(req);
     if (userId !== id) {
       res.statusCode = 403;
-      res.end(JSON.stringify({ message: "You can only edit your own profile" }));
+      res.end(
+        JSON.stringify({ message: "You can only edit your own profile" }),
+      );
       return;
     }
     const data = await BodyReader(req);
@@ -106,7 +112,11 @@ export const togglePrivate = async (req, res, id) => {
     const { userId } = requireAuthenticatedUser(req);
     if (userId !== id) {
       res.statusCode = 403;
-      res.end(JSON.stringify({ message: "You can only change your own privacy setting" }));
+      res.end(
+        JSON.stringify({
+          message: "You can only change your own privacy setting",
+        }),
+      );
       return;
     }
     const data = await BodyReader(req);
@@ -118,17 +128,28 @@ export const togglePrivate = async (req, res, id) => {
     }
     await toggleIsPrivateService(id, is_private);
     res.statusCode = 200;
-    res.end(JSON.stringify({ message: `Switched to ${is_private ? "Private" : "Public"} Account` }));
+    res.end(
+      JSON.stringify({
+        message: `Switched to ${is_private ? "Private" : "Public"} Account`,
+      }),
+    );
   } catch (error) {
     console.log("TOGGLE IS PRIVATE CONTROLLER ERROR -", error);
     res.statusCode = error.statusCode ?? 500;
-    res.end(JSON.stringify({ message: error.statusCode ? error.message : "Internal Server Error" }));
+    res.end(
+      JSON.stringify({
+        message: error.statusCode ? error.message : "Internal Server Error",
+      }),
+    );
   }
 };
 
 export const getProfileData = async (req, res, userId) => {
   try {
+    const authenticatedUser = requireAuthenticatedUser(req);
+
     const user = await getUserByIdService(userId);
+
     if (!user) {
       res.statusCode = 404;
       res.end(
@@ -141,7 +162,11 @@ export const getProfileData = async (req, res, userId) => {
 
     const followers = await getFollowersService(user.id);
     const following = await getFollowingService(user.id);
-    const posts = await getPostsByUserIdService(user.id);
+    const suggested = await getSuggestedUsersService(user.id);
+    const posts =
+      user.id == authenticatedUser.userId
+        ? await getFeedPostsService(user.id)
+        : await getPostsByUserIdService(user.id);
     const conversations = await getConversationsService(user.id);
 
     res.statusCode = 200;
@@ -151,6 +176,7 @@ export const getProfileData = async (req, res, userId) => {
         following,
         posts,
         conversations,
+        suggested,
       }),
     );
   } catch (error) {

@@ -21,15 +21,27 @@ const createToken = (userId, expiresIn) =>
   jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn });
 
 const setSessionCookies = (res, userId) => {
+  const accessToken = createToken(userId, "5m");
+  const refreshToken = createToken(userId, "10m");
+
   res.setHeader("Set-Cookie", [
-    `hicappAccessToken=${createToken(userId, "5m")}; ${cookieOptions(ACCESS_TOKEN_MAX_AGE)}`,
-    `hicappRefreshToken=${createToken(userId, "10m")}; ${cookieOptions(REFRESH_TOKEN_MAX_AGE)}`,
+    `hicappAccessToken=${accessToken}; ${cookieOptions(ACCESS_TOKEN_MAX_AGE)}`,
+    `hicappRefreshToken=${refreshToken}; ${cookieOptions(REFRESH_TOKEN_MAX_AGE)}`,
   ]);
+
+  return { accessToken, refreshToken };
 };
 
 const validateCredentials = ({ email, password }) => {
-  if (typeof email !== "string" || !email.trim() || typeof password !== "string" || password.length < 8) {
-    const error = new Error("Email and a password of at least 8 characters are required");
+  if (
+    typeof email !== "string" ||
+    !email.trim() ||
+    typeof password !== "string" ||
+    password.length < 8
+  ) {
+    const error = new Error(
+      "Email and a password of at least 8 characters are required",
+    );
     error.statusCode = 400;
     throw error;
   }
@@ -38,26 +50,41 @@ const validateCredentials = ({ email, password }) => {
 export const signInUser = async (req, res) => {
   try {
     const credentials = await BodyReader(req);
-    validateCredentials(credentials);
-    const user = await getUserForAuthenticationService(credentials.email.trim());
+    // validateCredentials(credentials);
+    const user = await getUserForAuthenticationService(
+      credentials.email.trim(),
+    );
     if (!user) return sendError(res, 401, "Invalid email or password");
 
     // Existing plaintext passwords are upgraded on the user's next successful login.
     const passwordMatches = user.password.startsWith("scrypt:")
       ? await verifyPassword(credentials.password, user.password)
       : credentials.password === user.password;
-    if (!passwordMatches) return sendError(res, 401, "Invalid email or password");
+    if (!passwordMatches)
+      return sendError(res, 401, "Invalid email or password");
 
     if (!user.password.startsWith("scrypt:")) {
-      await updateUserPasswordService(user.id, await hashPassword(credentials.password));
+      await updateUserPasswordService(
+        user.id,
+        await hashPassword(credentials.password),
+      );
     }
 
     const { password: _password, ...safeUser } = user;
-    setSessionCookies(res, user.id);
-    return sendJson(res, 200, { message: "Sign In Success", user: safeUser });
+    const { accessToken, refreshToken } = setSessionCookies(res, user.id);
+    return sendJson(res, 200, {
+      message: "Sign In Success",
+      user: safeUser,
+      accessToken,
+      refreshToken,
+    });
   } catch (error) {
     console.error("LOGIN ERROR -", error);
-    return sendError(res, error.statusCode ?? 500, error.statusCode ? error.message : "Internal Server Error");
+    return sendError(
+      res,
+      error.statusCode ?? 500,
+      error.statusCode ? error.message : "Internal Server Error",
+    );
   }
 };
 
@@ -69,11 +96,18 @@ export const registerUser = async (req, res) => {
     const existingUser = await getUserForAuthenticationService(email);
     if (existingUser) return sendError(res, 409, "User already registered");
 
-    const user = await createUserService(email, await hashPassword(credentials.password));
+    const user = await createUserService(
+      email,
+      await hashPassword(credentials.password),
+    );
     return sendJson(res, 201, { message: "Created User Successfully", user });
   } catch (error) {
     console.error("CREATE USER ERROR -", error);
-    return sendError(res, error.statusCode ?? 500, error.statusCode ? error.message : "Internal Server Error");
+    return sendError(
+      res,
+      error.statusCode ?? 500,
+      error.statusCode ? error.message : "Internal Server Error",
+    );
   }
 };
 

@@ -1,7 +1,11 @@
 import readline from "readline";
 import pool from "./config/db.js";
 import { getAllUsersService } from "./services/user.service.js";
-import { createUsersTableService } from "./services/table.service.js";
+import {
+  createCommentTableService,
+  createLikeTableService,
+  createUsersTableService,
+} from "./services/table.service.js";
 import {
   createPostService,
   createPostTableService,
@@ -57,6 +61,11 @@ async function main() {
           await createConversationTableService();
           await createMessageTableService();
           await createIndexesForMessagesAndConversationService();
+
+          await createLikeTableService();
+          await createCommentTableService();
+          await createIndexesForMessagesAndConversationService();
+
           console.log("✅ All tables are ready.");
           break;
 
@@ -128,8 +137,6 @@ async function main() {
 
         case "8":
           let query = `
-          ALTER TABLE conversation_participants
-          ADD COLUMN last_read_at TIMESTAMPTZ;
           `;
           const result = await pool.query(query);
           console.log("Command Executed Done");

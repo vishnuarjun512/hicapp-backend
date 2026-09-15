@@ -2,7 +2,8 @@ import jwt from "jsonwebtoken";
 
 export const readJWT = (token) => {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET);
+    const data = jwt.verify(token, process.env.JWT_SECRET);
+    return data;
   } catch (error) {
     console.log(error);
     return null;
@@ -23,7 +24,6 @@ export const getTokenFromCookie = (req) => {
   if (!cookie) {
     return null;
   }
-
   return cookie.slice("hicappAccessToken=".length);
 };
 

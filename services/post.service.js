@@ -30,34 +30,163 @@ export const getPostByIdService = async (postId) => {
 
 export const getPostsByUserIdService = async (
   userId,
+  currentUserId,
   startIndex = 0,
   endIndex = 5,
 ) => {
   try {
     const query = `
-      SELECT p.id, p.body, p.visibility, p.location, p.created_at,
+        SELECT
+          p.id,
+          p.body,
+          p.visibility,
+          p.location,
+          p.created_at,
+
+          json_build_object(
+            'id', u.id,
+            'name', u.name,
+            'handle', u.handle,
+            'profilePicUrl', u.profile_pic_url
+          ) AS author,
+
+          (
+            SELECT COUNT(*)
+            FROM likes l
+            WHERE l.post_id = p.id
+          ) AS like_count,
+
+          (
+            SELECT COUNT(*)
+            FROM comments c
+            WHERE c.post_id = p.id
+          ) AS comment_count,
+
+          (
+            SELECT l.reaction
+            FROM likes l
+            WHERE l.post_id = p.id
+              AND l.user_id = $2
+            LIMIT 1
+          ) AS current_user_reaction
+
+        FROM posts p
+
+        JOIN users u
+          ON p.user_id = u.id
+
+        WHERE p.user_id = $1
+
+        ORDER BY p.created_at DESC
+
+        LIMIT $3
+        OFFSET $4
+    `;
+
+    const posts = await pool.query(query, [
+      userId,
+      currentUserId,
+      endIndex - startIndex,
+      startIndex,
+    ]);
+
+    const formattedPosts = posts.rows.map((post) => ({
+      ...post,
+      likes: Number(post.like_count),
+      comments: Number(post.comment_count),
+    }));
+
+    console.log(formattedPosts);
+    return formattedPosts;
+  } catch (error) {
+    console.log("GET POSTS BY USER ID SERVICE ERROR - ", error);
+    throw error;
+  }
+};
+
+export const getFeedPostsService = async (
+  currentUserId,
+  startIndex = 0,
+  endIndex = 5,
+) => {
+  try {
+    const query = `
+      SELECT
+        p.id,
+        p.body,
+        p.visibility,
+        p.location,
+        p.created_at,
+
         json_build_object(
           'id', u.id,
           'name', u.name,
           'handle', u.handle,
           'profilePicUrl', u.profile_pic_url
-        ) AS author
+        ) AS author,
+
+        (
+          SELECT COUNT(*)
+          FROM likes l
+          WHERE l.post_id = p.id
+        ) AS like_count,
+
+        (
+          SELECT COUNT(*)
+          FROM comments c
+          WHERE c.post_id = p.id
+        ) AS comment_count,
+
+        (
+          SELECT l.reaction
+          FROM likes l
+          WHERE l.post_id = p.id
+            AND l.user_id = $1
+          LIMIT 1
+        ) AS current_user_reaction
+
       FROM posts p
-      JOIN users u ON p.user_id = u.id
+
+      JOIN users u
+        ON p.user_id = u.id
+
       WHERE p.user_id = $1
+
+      OR EXISTS (
+        SELECT 1
+        FROM follow f
+        WHERE f.follower_id = $1
+          AND f.following_id = p.user_id
+      )
+
       ORDER BY p.created_at DESC
-      LIMIT $2 OFFSET $3
+
+      LIMIT $2
+      OFFSET $3
     `;
 
-    const posts = await pool.query(query, [
-      userId,
+    const result = await pool.query(query, [
+      currentUserId,
       endIndex - startIndex,
       startIndex,
     ]);
 
-    return posts.rows;
+    const posts = result.rows.map((post) => ({
+      id: post.id,
+      body: post.body,
+      visibility: post.visibility,
+      location: post.location,
+      created_at: post.created_at,
+      author: post.author,
+      likes: Number(post.like_count),
+      comments: Number(post.comment_count),
+
+      currentUserReaction: post.current_user_reaction,
+    }));
+
+    return posts;
   } catch (error) {
-    console.log("GET POSTS BY USER ID SERVICE ERROR - ", error);
+    console.log("GET FEED POSTS SERVICE ERROR - ", error);
     throw error;
   }
 };

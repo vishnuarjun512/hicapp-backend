@@ -21,7 +21,6 @@ export const getConversations = async (req, res) => {
     const conversations = await getConversationsService(user.userId);
 
     res.statusCode = 200;
-
     res.end(
       JSON.stringify({
         conversations,

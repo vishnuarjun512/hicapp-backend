@@ -87,3 +87,20 @@ export const deleteCommentByIDService = async (commentId) => {
     throw error;
   }
 };
+
+export const updateCommentService = async (commentId, updatedText) => {
+  try {
+    const query = `
+        UPDATE comments
+        SET comment = $2, updated_at = NOW()
+        WHERE id = $1
+        RETURNING id;
+    `;
+
+    const result = await pool.query(query, [commentId, updatedText]);
+    return result.rows[0];
+  } catch (error) {
+    console.log("COMMENTS PATCH SERVICE ERROR - ", error);
+    throw error;
+  }
+};

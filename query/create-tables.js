@@ -117,6 +117,9 @@ export const createCommentTableQuery = `
 
     comment TEXT NOT NULL,
 
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
     CONSTRAINT fk_comment_user
       FOREIGN KEY (user_id)
       REFERENCES users(id)

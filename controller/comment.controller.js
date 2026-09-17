@@ -4,6 +4,7 @@ import {
   createCommentService,
   getCommentByIDService,
   deleteCommentByIDService,
+  updateCommentService,
 } from "../services/comment.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 
@@ -73,6 +74,43 @@ export const deleteComment = async (req, res, commentID) => {
     );
   } catch (error) {
     console.log("COMMENTS DELETE CONTROLLER ERROR - ", error);
+    res.statusCode = 500;
+    res.end(
+      JSON.stringify({
+        message: "Internal Server Error",
+      }),
+    );
+    return;
+  }
+};
+
+export const updateComment = async (req, res, commentID) => {
+  try {
+    requireAuthenticatedUser(req);
+
+    const comment = await getCommentByIDService(commentID);
+
+    if (!comment) {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ message: "Comment not found" }));
+      return;
+    }
+
+    const { updatedText } = await BodyReader(req);
+
+    const { id } = await updateCommentService(commentID, updatedText);
+
+    const updatedComment = await getCommentByIDService(id);
+
+    res.statusCode = 201;
+    res.end(
+      JSON.stringify({
+        updatedComment,
+        message: "Comment updated Successfully",
+      }),
+    );
+  } catch (error) {
+    console.log("COMMENTS PATCH CONTROLLER ERROR - ", error);
     res.statusCode = 500;
     res.end(
       JSON.stringify({

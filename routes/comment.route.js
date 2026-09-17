@@ -2,6 +2,7 @@ import {
   createComment,
   deleteComment,
   getCommentsByPostID,
+  updateComment,
 } from "../controller/comment.controller.js";
 
 export const commentRoutes = (req, res) => {
@@ -20,6 +21,12 @@ export const commentRoutes = (req, res) => {
   if (req.method == "DELETE" && req.url.startsWith("/api/comment")) {
     const commentID = req.url.split("/").pop();
     deleteComment(req, res, commentID);
+    return true;
+  }
+
+  if (req.method == "PATCH" && req.url.startsWith("/api/comment")) {
+    const commentID = req.url.split("/").pop();
+    updateComment(req, res, commentID);
     return true;
   }
 

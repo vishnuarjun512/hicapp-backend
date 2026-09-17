@@ -30,12 +30,13 @@ export const editProfileService = async (
   handle,
   bio,
   verified = false,
+  profilePicUrl,
 ) => {
   const query = `UPDATE users
-  SET name=$2, handle=$3, bio=$4 , verified=$5
+  SET name=$2, handle=$3, bio=$4 , verified=$5, profile_pic_url=$6
   WHERE id=$1`;
 
-  await pool.query(query, [id, name, handle, bio, verified]);
+  await pool.query(query, [id, name, handle, bio, verified, profilePicUrl]);
 };
 
 export async function deleteUserByEmailService(email) {
@@ -77,7 +78,10 @@ export const getUserForAuthenticationService = async (email) => {
 };
 
 export const updateUserPasswordService = async (id, password) => {
-  await pool.query("UPDATE users SET password = $2 WHERE id = $1", [id, password]);
+  await pool.query("UPDATE users SET password = $2 WHERE id = $1", [
+    id,
+    password,
+  ]);
 };
 
 export const toggleIsPrivateService = async (id, is_private) => {

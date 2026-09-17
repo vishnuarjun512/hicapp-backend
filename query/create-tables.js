@@ -86,6 +86,32 @@ export const createPostTableQuery = `
       );
     `;
 
+export const createPostImagesTableQuery = `
+    CREATE TABLE post_images (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+        post_id UUID NOT NULL,
+        user_id UUID NOT NULL,
+        image_url TEXT NOT NULL,
+        position INTEGER NOT NULL,
+
+        created_at TIMESTAMP DEFAULT NOW(),
+
+        CONSTRAINT fk_post_images_post
+          FOREIGN KEY (post_id)
+          REFERENCES posts(id)
+          ON DELETE CASCADE,
+
+        CONSTRAINT fk_post_images_user
+          FOREIGN KEY (user_id)
+          REFERENCES users(id)
+          ON DELETE CASCADE,
+
+        CONSTRAINT unique_post_image_position
+          UNIQUE (post_id, position)
+    );
+    `;
+
 export const createLikeTableQuery = `
   CREATE TABLE IF NOT EXISTS likes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

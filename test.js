@@ -7,6 +7,7 @@ import {
   createUsersTableService,
 } from "./services/table.service.js";
 import {
+  createPostImagesTableService,
   createPostService,
   createPostTableService,
   getPostsByUserIdService,
@@ -57,6 +58,7 @@ async function main() {
         case "1":
           await createUsersTableService();
           await createPostTableService();
+          await createPostImagesTableService();
           await createFollowTables();
           await createConversationTableService();
           await createMessageTableService();

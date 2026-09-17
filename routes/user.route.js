@@ -1,3 +1,4 @@
+import { createPostImageUploadController } from "../controller/image.controller.js";
 import {
   editProfile,
   getProfileData,
@@ -36,6 +37,11 @@ export function userRoutes(req, res) {
   ) {
     const userId = req.url.split("/").pop();
     togglePrivate(req, res, userId);
+    return true;
+  }
+
+  if (req.method == "POST" && req.url.startsWith("/api/user/profilePic")) {
+    createPostImageUploadController(req, res);
     return true;
   }
 

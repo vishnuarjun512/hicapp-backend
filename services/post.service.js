@@ -1,5 +1,9 @@
 import pool from "../config/db.js";
-import { createPostTableQuery } from "../query/create-tables.js";
+import {
+  createPostImagesTableQuery,
+  createPostTableQuery,
+} from "../query/create-tables.js";
+import { getImageUploadURL } from "../utils/aws-s3.js";
 
 export const createPostTableService = async () => {
   try {
@@ -8,6 +12,17 @@ export const createPostTableService = async () => {
     console.log("✅ Post table created");
   } catch (error) {
     console.error("❌ CREATE POSTS TABLE ERROR - ", error);
+    throw error;
+  }
+};
+
+export const createPostImagesTableService = async () => {
+  try {
+    await pool.query(createPostImagesTableQuery);
+
+    console.log("✅ Post Images table created");
+  } catch (error) {
+    console.error("❌ CREATE POSTS IMAGES TABLE ERROR - ", error);
     throw error;
   }
 };
@@ -46,8 +61,24 @@ export const getPostsByUserIdService = async (
             'id', u.id,
             'name', u.name,
             'handle', u.handle,
-            'profilePicUrl', u.profile_pic_url
+            'profile_pic_url', u.profile_pic_url
           ) AS author,
+
+          (
+            SELECT COALESCE(
+              json_agg(
+                json_build_object(
+                  'id', pi.id,
+                  'url', pi.image_url,
+                  'position', pi.position
+                )
+                ORDER BY pi.position
+              ),
+              '[]'::json
+            )
+            FROM post_images pi
+            WHERE pi.post_id = p.id
+          ) AS images,
 
           (
             SELECT COUNT(*)
@@ -118,8 +149,24 @@ export const getFeedPostsService = async (
           'id', u.id,
           'name', u.name,
           'handle', u.handle,
-          'profilePicUrl', u.profile_pic_url
+          'profile_pic_url', u.profile_pic_url
         ) AS author,
+
+        (
+          SELECT COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pi.id,
+                'url', pi.image_url,
+                'position', pi.position
+              )
+              ORDER BY pi.position
+            ),
+            '[]'::json
+          )
+          FROM post_images pi
+          WHERE pi.post_id = p.id
+        ) AS images,
 
         (
           SELECT COUNT(*)
@@ -216,4 +263,79 @@ export const deletePostByIdService = async (id, userId) => {
     console.log("DELETE POST SERVICE ERROR - ", error);
     throw error;
   }
+};
+
+export const createPostImageUploadURLsService = async (
+  userId,
+  postId,
+  images,
+) => {
+  const bucket = process.env.AWS_BUCKET_NAME;
+
+  const uploadImages = await Promise.all(
+    images.map(async (image) => {
+      const { contentType, position } = image;
+
+      const extension = contentType.split("/")[1];
+
+      const key = `${userId}/posts/${postId}/im${position}.${extension}`;
+
+      const uploadUrl = await getImageUploadURL(bucket, key, contentType, 60);
+
+      const fileUrl = `https://${bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+
+      return {
+        position,
+        uploadUrl,
+        fileUrl,
+      };
+    }),
+  );
+
+  return uploadImages;
+};
+
+export const createPostImagesService = async (userId, postId, images) => {
+  const values = [];
+  const placeholders = [];
+
+  let parameterIndex = 1;
+
+  for (const image of images) {
+    placeholders.push(
+      `($${parameterIndex}, $${parameterIndex + 1}, $${parameterIndex + 2}, $${parameterIndex + 3})`,
+    );
+
+    values.push(postId, userId, image.url, image.position);
+
+    parameterIndex += 4;
+  }
+
+  const query = `
+    INSERT INTO post_images (
+      post_id,
+      user_id,
+      image_url,
+      position
+    )
+    VALUES ${placeholders.join(", ")}
+    RETURNING id, post_id, image_url, position;
+  `;
+
+  const result = await pool.query(query, values);
+
+  return result.rows;
+};
+
+export const getPostOwnershipService = async (postId, userId) => {
+  const query = `
+    SELECT id
+    FROM posts
+    WHERE id = $1
+      AND user_id = $2
+  `;
+
+  const result = await pool.query(query, [postId, userId]);
+
+  return result.rows[0];
 };

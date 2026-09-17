@@ -1,8 +1,6 @@
 import {
-  createUserService,
   editProfileService,
   getAllUsersService,
-  getUserByEmailService,
   getUserByIdService,
   toggleIsPrivateService,
 } from "../services/user.service.js";
@@ -15,6 +13,8 @@ import {
   getFeedPostsService,
   getPostsByUserIdService,
 } from "../services/post.service.js";
+
+import { deleteProfileImageService } from "../services/image.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 
 import { getConversationsService } from "../services/conversation.service.js";
@@ -86,9 +86,14 @@ export const editProfile = async (req, res, id) => {
       return;
     }
     const data = await BodyReader(req);
-    const { name, handle, bio, verified } = data;
+    const { name, handle, bio, verified, profilePicUrl } = data;
 
-    await editProfileService(id, name, handle, bio, verified);
+    if (profilePicUrl === null) {
+      await deleteProfileImageService(userId);
+      console.log("Deleted Profile Image");
+    }
+
+    await editProfileService(id, name, handle, bio, verified, profilePicUrl);
     res.statusCode = 200;
     res.end(
       JSON.stringify({

@@ -1,6 +1,9 @@
 import {
+  createPostImagesService,
+  createPostImageUploadURLsService,
   createPostService,
   deletePostByIdService,
+  getPostOwnershipService,
   getPostsByUserIdService,
 } from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
@@ -50,19 +53,14 @@ export const createPostController = async (req, res, userId) => {
 
 export const getPostsControllerByUserID = async (req, res, userId) => {
   try {
-    const authenticatedUser = requireAuthenticatedUser(req);
+    const { userId: id } = requireAuthenticatedUser(req);
     const url = new URL(req.url, `http://${req.headers.host}`);
     const page = parseInt(url.searchParams.get("page")) || 1;
     const limit = parseInt(url.searchParams.get("limit")) || 5;
     const startIndex = (page - 1) * limit;
     const endIndex = page * limit;
 
-    const posts = await getPostsByUserIdService(
-      userId,
-      authenticatedUser,
-      startIndex,
-      endIndex,
-    );
+    const posts = await getPostsByUserIdService(userId, startIndex, endIndex);
 
     res.statusCode = 200;
     res.end(
@@ -103,6 +101,176 @@ export const deletePostByIdController = async (req, res, id) => {
   } catch (error) {
     console.log("DELETE POST BY ID CONTROLLER ERROR - ", error);
     res.statusCode = 500;
+    res.end(
+      JSON.stringify({
+        message: "Internal Server Error",
+      }),
+    );
+  }
+};
+
+export const getPostImageURLS = async (req, res) => {
+  try {
+    const { userId } = requireAuthenticatedUser(req);
+
+    const data = await BodyReader(req);
+
+    const { postId, images } = data;
+    console.log("PostID, images", postId, images);
+
+    // -----------------------------
+    // Validate postId
+    // -----------------------------
+
+    if (!postId) {
+      res.statusCode = 400;
+      res.end(
+        JSON.stringify({
+          message: "postId is required",
+        }),
+      );
+      return;
+    }
+
+    // -----------------------------
+    // Validate images
+    // -----------------------------
+
+    if (!Array.isArray(images) || images.length === 0) {
+      res.statusCode = 400;
+      res.end(
+        JSON.stringify({
+          message: "images are required",
+        }),
+      );
+      return;
+    }
+
+    if (images.length > 10) {
+      res.statusCode = 400;
+      res.end(
+        JSON.stringify({
+          message: "Maximum 10 images allowed",
+        }),
+      );
+      return;
+    }
+
+    // -----------------------------
+    // Validate each image
+    // -----------------------------
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+    for (const image of images) {
+      if (!allowedTypes.includes(image.contentType)) {
+        res.statusCode = 400;
+        res.end(
+          JSON.stringify({
+            message: `Unsupported image type: ${image.contentType}`,
+          }),
+        );
+        return;
+      }
+
+      if (
+        !Number.isInteger(image.position) ||
+        image.position < 1 ||
+        image.position > 10
+      ) {
+        res.statusCode = 400;
+        res.end(
+          JSON.stringify({
+            message: "Invalid image position",
+          }),
+        );
+        return;
+      }
+    }
+
+    // -----------------------------
+    // Generate upload URLs
+    // -----------------------------
+
+    const uploadImages = await createPostImageUploadURLsService(
+      userId,
+      postId,
+      images,
+    );
+
+    res.statusCode = 200;
+
+    res.end(
+      JSON.stringify({
+        images: uploadImages,
+      }),
+    );
+  } catch (error) {
+    console.error("CREATE POST IMAGE UPLOAD URL CONTROLLER ERROR:", error);
+
+    res.statusCode = 500;
+
+    res.end(
+      JSON.stringify({
+        message: "Internal Server Error",
+      }),
+    );
+  }
+};
+
+export const createPostImagesController = async (req, res) => {
+  try {
+    const { userId } = requireAuthenticatedUser(req);
+
+    const data = await BodyReader(req);
+
+    const { images, postId } = data;
+
+    if (!postId) {
+      res.statusCode = 400;
+      res.end(
+        JSON.stringify({
+          message: "postId is required",
+        }),
+      );
+      return;
+    }
+
+    if (!Array.isArray(images) || images.length === 0) {
+      res.statusCode = 400;
+      res.end(
+        JSON.stringify({
+          message: "images are required",
+        }),
+      );
+      return;
+    }
+
+    if (images.length > 10) {
+      res.statusCode = 400;
+      res.end(
+        JSON.stringify({
+          message: "Maximum 10 images allowed",
+        }),
+      );
+      return;
+    }
+
+    const savedImages = await createPostImagesService(userId, postId, images);
+
+    res.statusCode = 201;
+
+    res.end(
+      JSON.stringify({
+        message: "Post images saved successfully",
+        images: savedImages,
+      }),
+    );
+  } catch (error) {
+    console.error("CREATE POST IMAGES CONTROLLER ERROR:", error);
+
+    res.statusCode = 500;
+
     res.end(
       JSON.stringify({
         message: "Internal Server Error",

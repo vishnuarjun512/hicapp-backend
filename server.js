@@ -6,7 +6,9 @@ import { postRoutes } from "./routes/post.route.js";
 import { followRoutes } from "./routes/follow.route.js";
 import { conversationRoutes } from "./routes/conversation.route.js";
 import { authRoutes } from "./routes/auth.route.js";
+import { likeRoutes } from "./routes/like.route.js";
 import { setupWebSocket } from "./websocket.js";
+import { commentRoutes } from "./routes/comment.route.js";
 dotenv.config();
 const PORT = process.env.PORT;
 
@@ -51,6 +53,15 @@ const server = http.createServer((req, res) => {
 
   const conversationRoutesHandled = conversationRoutes(req, res);
   if (conversationRoutesHandled) {
+    return;
+  }
+  const likeRoutesHandled = likeRoutes(req, res);
+  if (likeRoutesHandled) {
+    return;
+  }
+
+  const commentRoutesHandled = commentRoutes(req, res);
+  if (commentRoutesHandled) {
     return;
   }
 

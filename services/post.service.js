@@ -63,10 +63,10 @@ export const getPostsByUserIdService = async (
           ) AS comment_count,
 
           (
-            SELECT l.reaction
-            FROM likes l
-            WHERE l.post_id = p.id
-              AND l.user_id = $2
+            SELECT cl.*
+            FROM likes cl
+            WHERE cl.post_id = p.id
+              AND cl.user_id = $2
             LIMIT 1
           ) AS current_user_reaction
 
@@ -137,13 +137,12 @@ export const getFeedPostsService = async (
           WHERE c.post_id = p.id
         ) AS comment_count,
 
-        (
-          SELECT l.reaction
+        EXISTS (
+          SELECT 1
           FROM likes l
           WHERE l.post_id = p.id
             AND l.user_id = $1
-          LIMIT 1
-        ) AS current_user_reaction
+        ) AS liked
 
       FROM posts p
 

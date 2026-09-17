@@ -9,9 +9,6 @@ import {
   updateUserPasswordService,
 } from "../services/user.service.js";
 
-const ACCESS_TOKEN_MAX_AGE = 5 * 60;
-const REFRESH_TOKEN_MAX_AGE = 10 * 60;
-
 const cookieOptions = (maxAge) => {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   return `HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
@@ -21,8 +18,19 @@ const createToken = (userId, expiresIn) =>
   jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn });
 
 const setSessionCookies = (res, userId) => {
-  const accessToken = createToken(userId, "5m");
-  const refreshToken = createToken(userId, "10m");
+  const ACCESS_TOKEN_MAX_AGE_IN_MINUTES = 10;
+  const REFRESH_TOKEN_MAX_AGE_IN_MINUTES = 20;
+  const ACCESS_TOKEN_MAX_AGE = ACCESS_TOKEN_MAX_AGE_IN_MINUTES * 60;
+  const REFRESH_TOKEN_MAX_AGE = REFRESH_TOKEN_MAX_AGE_IN_MINUTES * 60;
+
+  const accessToken = createToken(
+    userId,
+    `${ACCESS_TOKEN_MAX_AGE_IN_MINUTES}m`,
+  );
+  const refreshToken = createToken(
+    userId,
+    `${REFRESH_TOKEN_MAX_AGE_IN_MINUTES}m`,
+  );
 
   res.setHeader("Set-Cookie", [
     `hicappAccessToken=${accessToken}; ${cookieOptions(ACCESS_TOKEN_MAX_AGE)}`,

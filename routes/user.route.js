@@ -14,7 +14,6 @@ export function userRoutes(req, res) {
 
   if (req.method === "PUT" && req.url.startsWith("/api/user/edit-profile/")) {
     const id = req.url.split("/").pop();
-
     editProfile(req, res, id);
     return true;
   }

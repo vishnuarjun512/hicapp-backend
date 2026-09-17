@@ -16,7 +16,11 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
       const { conversationId, content } = message;
 
       try {
-        if (typeof conversationId !== "string" || typeof content !== "string" || !content.trim()) {
+        if (
+          typeof conversationId !== "string" ||
+          typeof content !== "string" ||
+          !content.trim()
+        ) {
           throw new Error("conversationId and non-empty content are required");
         }
 
@@ -27,13 +31,9 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
           content.trim(),
         );
 
-        console.log("💾 Message saved:", newMessage);
-
         // 2. Get all participants
         const participants =
           await getConversationParticipantsService(conversationId);
-
-        console.log("👥 Participants:", participants);
 
         // 3. Send message to everyone
         for (const participant of participants) {

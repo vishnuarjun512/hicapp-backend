@@ -23,7 +23,7 @@ export const authRoutes = (req, res) => {
     return true;
   }
 
-  if (req.method == "POST" && pathname == "/api/auth/logout") {
+  if (req.method == "GET" && pathname == "/api/auth/logout") {
     logoutUser(req, res);
     return true;
   }

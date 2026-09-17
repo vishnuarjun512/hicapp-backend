@@ -92,6 +92,7 @@ export const editProfile = async (req, res, id) => {
     res.statusCode = 200;
     res.end(
       JSON.stringify({
+        error: false,
         message: "Profile Updated Successfully",
       }),
     );

@@ -30,7 +30,6 @@ export const getPostByIdService = async (postId) => {
 
 export const getPostsByUserIdService = async (
   userId,
-  currentUserId,
   startIndex = 0,
   endIndex = 5,
 ) => {
@@ -62,13 +61,12 @@ export const getPostsByUserIdService = async (
             WHERE c.post_id = p.id
           ) AS comment_count,
 
-          (
-            SELECT cl.*
-            FROM likes cl
-            WHERE cl.post_id = p.id
-              AND cl.user_id = $2
-            LIMIT 1
-          ) AS current_user_reaction
+          EXISTS (
+            SELECT 1
+            FROM likes l
+            WHERE l.post_id = p.id
+              AND l.user_id = $1
+          ) AS liked
 
         FROM posts p
 
@@ -79,13 +77,12 @@ export const getPostsByUserIdService = async (
 
         ORDER BY p.created_at DESC
 
-        LIMIT $3
-        OFFSET $4
+        LIMIT $2
+        OFFSET $3
     `;
 
     const posts = await pool.query(query, [
       userId,
-      currentUserId,
       endIndex - startIndex,
       startIndex,
     ]);
@@ -96,7 +93,6 @@ export const getPostsByUserIdService = async (
       comments: Number(post.comment_count),
     }));
 
-    console.log(formattedPosts);
     return formattedPosts;
   } catch (error) {
     console.log("GET POSTS BY USER ID SERVICE ERROR - ", error);
@@ -171,15 +167,9 @@ export const getFeedPostsService = async (
     ]);
 
     const posts = result.rows.map((post) => ({
-      id: post.id,
-      body: post.body,
-      visibility: post.visibility,
-      location: post.location,
-      created_at: post.created_at,
-      author: post.author,
+      ...post,
       likes: Number(post.like_count),
       comments: Number(post.comment_count),
-
       currentUserReaction: post.current_user_reaction,
     }));
 

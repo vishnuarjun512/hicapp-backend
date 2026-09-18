@@ -9,6 +9,11 @@ import {
   updateUserPasswordService,
 } from "../services/user.service.js";
 
+const ACCESS_TOKEN_MAX_AGE_IN_MINUTES = 10;
+const REFRESH_TOKEN_MAX_AGE_IN_MINUTES = 20;
+const ACCESS_TOKEN_MAX_AGE = ACCESS_TOKEN_MAX_AGE_IN_MINUTES * 60;
+const REFRESH_TOKEN_MAX_AGE = REFRESH_TOKEN_MAX_AGE_IN_MINUTES * 60;
+
 const cookieOptions = (maxAge) => {
   const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
   return `HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
@@ -18,11 +23,6 @@ const createToken = (userId, expiresIn) =>
   jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn });
 
 const setSessionCookies = (res, userId) => {
-  const ACCESS_TOKEN_MAX_AGE_IN_MINUTES = 10;
-  const REFRESH_TOKEN_MAX_AGE_IN_MINUTES = 20;
-  const ACCESS_TOKEN_MAX_AGE = ACCESS_TOKEN_MAX_AGE_IN_MINUTES * 60;
-  const REFRESH_TOKEN_MAX_AGE = REFRESH_TOKEN_MAX_AGE_IN_MINUTES * 60;
-
   const accessToken = createToken(
     userId,
     `${ACCESS_TOKEN_MAX_AGE_IN_MINUTES}m`,
@@ -79,12 +79,15 @@ export const signInUser = async (req, res) => {
     }
 
     const { password: _password, ...safeUser } = user;
+
     const { accessToken, refreshToken } = setSessionCookies(res, user.id);
     return sendJson(res, 200, {
       message: "Sign In Success",
       user: safeUser,
       accessToken,
       refreshToken,
+      accessToken_Duration: ACCESS_TOKEN_MAX_AGE_IN_MINUTES,
+      refreshToken_Duration: REFRESH_TOKEN_MAX_AGE_IN_MINUTES,
     });
   } catch (error) {
     console.error("LOGIN ERROR -", error);

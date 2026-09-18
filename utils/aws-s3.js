@@ -4,6 +4,7 @@ import {
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { URL } from "node:url";
 
 const s3 = new S3Client({
   region: process.env.AWS_REGION,
@@ -12,6 +13,12 @@ const s3 = new S3Client({
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
 });
+
+export const getS3KeyFromUrl = (url) => {
+  const parsedUrl = new URL(url);
+
+  return decodeURIComponent(parsedUrl.pathname.substring(1));
+};
 
 export const getImageUploadURL = async (
   bucket,

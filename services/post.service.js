@@ -30,10 +30,35 @@ export const createPostImagesTableService = async () => {
 export const getPostByIdService = async (postId) => {
   try {
     const query = `
-        SELECT id, user_id, body, visibility, location, created_at, updated_at
-        FROM posts
-        WHERE id=$1
-      `;
+      SELECT
+        p.id,
+        p.user_id,
+        p.body,
+        p.visibility,
+        p.location,
+        p.created_at,
+        p.updated_at,
+
+        (
+          SELECT COALESCE(
+            json_agg(
+              json_build_object(
+                'id', pi.id,
+                'url', pi.image_url,
+                'position', pi.position
+              )
+              ORDER BY pi.position
+            ),
+            '[]'::json
+          )
+          FROM post_images pi
+          WHERE pi.post_id = p.id
+        ) AS images
+
+      FROM posts p
+
+      WHERE p.id = $1
+    `;
 
     const post = await pool.query(query, [postId]);
     return post.rows[0];
@@ -238,7 +263,7 @@ export const createPostService = async (
     INSERT INTO posts 
     (user_id, body, visibility, location)
     VALUES ($1, $2, $3, $4)
-    RETURNING id
+    RETURNING *
     `;
 
     const post = await pool.query(query, [

@@ -4,11 +4,13 @@ import {
   createPostService,
   deletePostByIdService,
   getPostOwnershipService,
+  getPostByIdService,
   getPostsByUserIdService,
 } from "../services/post.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 import { URL } from "node:url";
 import { requireAuthenticatedUser } from "../utils/jwt.js";
+import { deleteS3Object, getS3KeyFromUrl } from "../utils/aws-s3.js";
 
 export const createPostController = async (req, res, userId) => {
   try {
@@ -31,12 +33,14 @@ export const createPostController = async (req, res, userId) => {
       return;
     }
 
-    const post = await createPostService(
+    const { id } = await createPostService(
       userId,
       body.trim(),
       visibility,
       location,
     );
+
+    const post = await getPostByIdService(id);
 
     res.statusCode = 201;
     res.end(JSON.stringify({ message: "Post Created Successfully", post }));
@@ -82,12 +86,64 @@ export const getPostsControllerByUserID = async (req, res, userId) => {
 export const deletePostByIdController = async (req, res, id) => {
   try {
     const { userId } = requireAuthenticatedUser(req);
-    const post = await deletePostByIdService(id, userId);
+
+    // -----------------------------------
+    // 1. Get post
+    // -----------------------------------
+
+    const post = await getPostByIdService(id);
+
     if (!post) {
       res.statusCode = 404;
-      res.end(JSON.stringify({ message: "Post not found" }));
+      res.end(
+        JSON.stringify({
+          message: "Post not found",
+        }),
+      );
       return;
     }
+
+    // -----------------------------------
+    // 2. Make sure user owns the post
+    // -----------------------------------
+
+    if (post.user_id !== userId) {
+      res.statusCode = 403;
+      res.end(
+        JSON.stringify({
+          message: "You can only delete your own posts",
+        }),
+      );
+      return;
+    }
+
+    // -----------------------------------
+    // 3. Delete images from S3
+    // -----------------------------------
+
+    if (post.images.length > 0) {
+      // delete images from S3
+      await Promise.all(
+        post.images.map((image) => {
+          const key = getS3KeyFromUrl(image.url);
+
+          return deleteS3Object(process.env.AWS_BUCKET_NAME, key);
+        }),
+      );
+    }
+
+    // -----------------------------------
+    // 4. Delete post from database
+    // -----------------------------------
+
+    await deletePostByIdService(id, userId);
+
+    // post_images rows are automatically
+    // deleted because of ON DELETE CASCADE
+
+    // -----------------------------------
+    // 5. Response
+    // -----------------------------------
 
     res.statusCode = 200;
 
@@ -100,7 +156,9 @@ export const deletePostByIdController = async (req, res, id) => {
     );
   } catch (error) {
     console.log("DELETE POST BY ID CONTROLLER ERROR - ", error);
+
     res.statusCode = 500;
+
     res.end(
       JSON.stringify({
         message: "Internal Server Error",

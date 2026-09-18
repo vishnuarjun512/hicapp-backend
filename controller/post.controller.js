@@ -57,7 +57,7 @@ export const createPostController = async (req, res, userId) => {
 
 export const getPostsControllerByUserID = async (req, res, userId) => {
   try {
-    const { userId: id } = requireAuthenticatedUser(req);
+    requireAuthenticatedUser(req);
     const url = new URL(req.url, `http://${req.headers.host}`);
     const page = parseInt(url.searchParams.get("page")) || 1;
     const limit = parseInt(url.searchParams.get("limit")) || 5;
@@ -107,7 +107,7 @@ export const deletePostByIdController = async (req, res, id) => {
     // 2. Make sure user owns the post
     // -----------------------------------
 
-    if (post.user_id !== userId) {
+    if (post.author.id !== userId) {
       res.statusCode = 403;
       res.end(
         JSON.stringify({

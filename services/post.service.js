@@ -32,12 +32,19 @@ export const getPostByIdService = async (postId) => {
     const query = `
       SELECT
         p.id,
-        p.user_id,
+         
         p.body,
         p.visibility,
         p.location,
         p.created_at,
         p.updated_at,
+
+        json_build_object(
+          'id', u.id,
+          'name', u.name,
+          'handle', u.handle,
+          'profile_pic_url', u.profile_pic_url
+        ) AS author,
 
         (
           SELECT COALESCE(
@@ -56,6 +63,9 @@ export const getPostByIdService = async (postId) => {
         ) AS images
 
       FROM posts p
+
+      JOIN users u
+        ON p.user_id = u.id
 
       WHERE p.id = $1
     `;

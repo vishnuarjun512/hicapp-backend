@@ -1,6 +1,7 @@
 import {
   createMessageService,
   getConversationParticipantsService,
+  getMessageByIDService,
   markConversationReadService,
 } from "./services/message.service.js";
 
@@ -12,7 +13,7 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
     // SEND MESSAGE
     // =========================================================
 
-    case "message:send": {
+    case "message:frontend->backend": {
       const { conversationId, content } = message;
 
       try {
@@ -49,7 +50,7 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
             if (socket.readyState === WebSocket.OPEN) {
               socket.send(
                 JSON.stringify({
-                  type: "message:new",
+                  type: "message:backend->frontend",
                   message: newMessage,
                 }),
               );

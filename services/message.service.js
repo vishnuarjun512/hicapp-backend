@@ -80,6 +80,58 @@ export const getMessagesService = async (conversationId, userId) => {
   }
 };
 
+export const getMessageByIDService = async (messageID) => {
+  try {
+    const query = `
+      SELECT
+        m.id,
+        m.conversation_id,
+        m.content,
+        m.created_at,
+        m.read_at,
+
+        u.id AS sender_id,
+        u.name AS sender_name,
+        u.handle AS sender_handle,
+        u."profile_pic_url" AS sender_profile_pic
+
+      FROM messages m
+
+      JOIN users u
+        ON u.id = m.sender_id
+
+      WHERE m.id = $1
+    `;
+
+    const result = await pool.query(query, [messageID]);
+
+    const messages = result.rows.map((row) => ({
+      id: row.id,
+
+      conversationId: row.conversation_id,
+
+      sender: {
+        id: row.sender_id,
+        name: row.sender_name,
+        handle: row.sender_handle,
+        profilePic: row.sender_profile_pic,
+      },
+
+      content: row.content,
+
+      createdAt: row.created_at,
+
+      readAt: row.read_at,
+    }));
+
+    return messages[0];
+  } catch (error) {
+    console.log("GET MESSAGE BY ID SERVICE ERROR - ", error);
+
+    throw error;
+  }
+};
+
 export const createMessageService = async (
   conversationId,
   senderId,
@@ -142,7 +194,7 @@ export const createMessageService = async (
         id: sender.id,
         name: sender.name,
         handle: sender.handle,
-        profilePic: sender.profile_pic_url,
+        profile_pic_url: sender.profile_pic_url,
       },
 
       content: message.content,

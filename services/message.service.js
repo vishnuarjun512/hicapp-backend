@@ -69,7 +69,7 @@ export const getMessagesService = async (conversationId, userId) => {
 
       content: row.content,
 
-      createdAt: row.created_at,
+      created_at: row.created_at,
 
       readAt: row.read_at,
     }));
@@ -84,50 +84,27 @@ export const getMessageByIDService = async (messageID) => {
   try {
     const query = `
       SELECT
-        m.id,
-        m.conversation_id,
-        m.content,
-        m.created_at,
-        m.read_at,
-
-        u.id AS sender_id,
-        u.name AS sender_name,
-        u.handle AS sender_handle,
-        u."profile_pic_url" AS sender_profile_pic
+        m.*,
+        json_build_object(
+          'id', u.id,
+          'name',u.name ,
+          'handle',u.handle, 
+          'profile_pic_url', u.profile_pic_url
+        ) as sender
 
       FROM messages m
 
       JOIN users u
-        ON u.id = m.sender_id
+        ON m.sender_id = u.id
 
       WHERE m.id = $1
     `;
 
     const result = await pool.query(query, [messageID]);
 
-    const messages = result.rows.map((row) => ({
-      id: row.id,
-
-      conversationId: row.conversation_id,
-
-      sender: {
-        id: row.sender_id,
-        name: row.sender_name,
-        handle: row.sender_handle,
-        profilePic: row.sender_profile_pic,
-      },
-
-      content: row.content,
-
-      createdAt: row.created_at,
-
-      readAt: row.read_at,
-    }));
-
-    return messages[0];
+    return result.rows[0];
   } catch (error) {
     console.log("GET MESSAGE BY ID SERVICE ERROR - ", error);
-
     throw error;
   }
 };
@@ -139,73 +116,15 @@ export const createMessageService = async (
 ) => {
   try {
     const query = `
-      INSERT INTO messages (
-        conversation_id,
-        sender_id,
-        content
-      )
-      SELECT
-        $1,
-        $2,
-        $3
-      WHERE EXISTS (
-        SELECT 1
-        FROM conversation_participants
-        WHERE conversation_id = $1
-        AND user_id = $2
-      )
-      RETURNING
-        id,
-        conversation_id,
-        sender_id,
-        content,
-        created_at,
-        read_at;
+      INSERT INTO messages 
+      (conversation_id,sender_id,content)
+      VALUES ($1, $2, $3)
+      RETURNING id
     `;
-
     const result = await pool.query(query, [conversationId, senderId, content]);
-
-    if (result.rows.length === 0) {
-      throw new Error("User is not a participant in this conversation");
-    }
-
-    const message = result.rows[0];
-
-    // Get sender information
-    const senderQuery = `
-      SELECT
-        id,
-        name,
-        handle,
-        "profile_pic_url"
-      FROM users
-      WHERE id = $1;
-    `;
-
-    const senderResult = await pool.query(senderQuery, [senderId]);
-    const sender = senderResult.rows[0];
-
-    return {
-      id: message.id,
-
-      conversationId: message.conversation_id,
-
-      sender: {
-        id: sender.id,
-        name: sender.name,
-        handle: sender.handle,
-        profile_pic_url: sender.profile_pic_url,
-      },
-
-      content: message.content,
-
-      createdAt: message.created_at,
-
-      readAt: message.read_at,
-    };
+    return result.rows[0];
   } catch (error) {
     console.log("CREATE MESSAGE SERVICE ERROR - ", error);
-
     throw error;
   }
 };

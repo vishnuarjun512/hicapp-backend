@@ -26,11 +26,13 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
         }
 
         // 1. Save message to database
-        const newMessage = await createMessageService(
+        const { id } = await createMessageService(
           conversationId,
           ws.userId,
           content.trim(),
         );
+
+        const newMessage = await getMessageByIDService(id);
 
         // 2. Get all participants
         const participants =

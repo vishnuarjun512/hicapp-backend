@@ -77,7 +77,7 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
     // CONVERSATION READ
     // =========================================================
 
-    case "conversation:read": {
+    case "conversation:read(frontend->backend)": {
       const { conversationId } = message;
 
       try {
@@ -89,34 +89,19 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
           ws.userId,
         );
 
-        console.log("📖 Read state:", readState);
-
         const participants =
           await getConversationParticipantsService(conversationId);
-
-        console.log("👥 Participants:", participants);
 
         for (const participant of participants) {
           const participantID = participant.user_id;
 
-          if (participantID === ws.userId) {
-            continue;
-          }
-
           const userSockets = connectedUsers.get(participantID);
-
-          if (!userSockets) {
-            console.log("⚠️ No socket found for user:", participantID);
-            continue;
-          }
 
           for (const socket of userSockets) {
             if (socket.readyState === WebSocket.OPEN) {
-              console.log("📤 Sending conversation:read to:", participantID);
-
               socket.send(
                 JSON.stringify({
-                  type: "conversation:read",
+                  type: "conversation:read(backend->frontend)",
                   conversationId: readState.conversation_id,
                   userId: readState.user_id,
                   lastReadAt: readState.last_read_at,

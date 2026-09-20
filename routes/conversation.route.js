@@ -1,29 +1,3 @@
-/*
-
-Your routes
-
-I'd make your initial API:
-
-POST   /api/conversations
-
-GET    /api/conversations
-
-GET    /api/conversations/:id/messages
-
-POST   /api/conversations/:id/messages
-
-Later:
-
-PATCH  /api/messages/:id/read
-
-PATCH  /api/messages/:id
-
-DELETE /api/messages/:id
-
-So your frontend flow becomes:
-
-*/
-
 import {
   createConversation,
   getConversations,

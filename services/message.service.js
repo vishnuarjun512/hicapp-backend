@@ -24,47 +24,93 @@ export const createIndexesForMessagesAndConversationService = async () => {
   }
 };
 
-export const getMessagesService = async (conversationId, userId) => {
+export const getMessagesService = async (
+  conversationId,
+  userId,
+  limit = 10,
+  prevMessageID = null,
+) => {
   try {
-    const query = `
-      SELECT
-        m.id,
-        m.conversation_id,
-        m.content,
-        m.created_at,
-        m.read_at,
+    let query;
+    let params;
 
-        u.id AS sender_id,
-        u.name AS sender_name,
-        u.handle AS sender_handle,
-        u."profile_pic_url" AS sender_profile_pic
+    if (prevMessageID) {
+      query = `
+        SELECT
+          m.*,
+          json_build_object(
+            'id', u.id,
+            'name', u.name,
+            'handle', u.handle,
+            'profile_pic_url', u.profile_pic_url
+          ) AS sender
 
-      FROM messages m
+        FROM messages m
 
-      JOIN users u
-        ON u.id = m.sender_id
+        JOIN users u
+          ON u.id = m.sender_id
 
-      JOIN conversation_participants cp
-        ON cp.conversation_id = m.conversation_id
-        AND cp.user_id = $2
+        JOIN conversation_participants cp
+          ON cp.conversation_id = m.conversation_id
+          AND cp.user_id = $2
 
-      WHERE m.conversation_id = $1
+        WHERE m.conversation_id = $1
+          AND m.created_at < (
+            SELECT created_at
+            FROM messages
+            WHERE id = $3::uuid
+          )
 
-      ORDER BY m.created_at ASC;
-    `;
+        ORDER BY m.created_at DESC
+        LIMIT $4;
+      `;
 
-    const result = await pool.query(query, [conversationId, userId]);
+      params = [conversationId, userId, prevMessageID, limit + 1];
+    } else {
+      query = `
+        SELECT
+          m.*,
+          json_build_object(
+            'id', u.id,
+            'name', u.name,
+            'handle', u.handle,
+            'profile_pic_url', u.profile_pic_url
+          ) AS sender
 
-    return result.rows.map((row) => ({
+        FROM messages m
+
+        JOIN users u
+          ON u.id = m.sender_id
+
+        JOIN conversation_participants cp
+          ON cp.conversation_id = m.conversation_id
+          AND cp.user_id = $2
+
+        WHERE m.conversation_id = $1
+
+        ORDER BY m.created_at DESC
+        LIMIT $3;
+      `;
+
+      params = [conversationId, userId, limit + 1];
+    }
+
+    const result = await pool.query(query, params);
+
+    const hasMore = result.rows.length > limit;
+
+    const rows = result.rows.slice(0, limit);
+
+    const messages = rows.map((row) => ({
       id: row.id,
 
       conversationId: row.conversation_id,
 
       sender: {
-        id: row.sender_id,
-        name: row.sender_name,
-        handle: row.sender_handle,
-        profilePic: row.sender_profile_pic,
+        id: row.sender.id,
+        name: row.sender.name,
+        handle: row.sender.handle,
+        profilePic: row.sender.profile_pic_url,
       },
 
       content: row.content,
@@ -73,9 +119,13 @@ export const getMessagesService = async (conversationId, userId) => {
 
       readAt: row.read_at,
     }));
+
+    return {
+      messages,
+      hasMore,
+    };
   } catch (error) {
     console.log("GET MESSAGES SERVICE ERROR - ", error);
-
     throw error;
   }
 };

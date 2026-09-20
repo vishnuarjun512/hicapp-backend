@@ -9,23 +9,46 @@ import { verifyToken } from "../utils/jwt.js";
 export const getMessages = async (req, res, conversationId) => {
   try {
     const user = verifyToken(req);
+
+    const url = new URL(req.url, "http://localhost:3000");
+
+    const limitParam = url.searchParams.get("limit");
+    const prevMessageID = url.searchParams.get("prevMessageID");
+
+    const limit = limitParam ? Number(limitParam) : 10;
+
+    console.log("Search Params ->", {
+      limit,
+      prevMessageID,
+    });
+
     if (!user) {
       res.statusCode = 401;
+
       res.end(
         JSON.stringify({
           message: "Authentication required",
         }),
       );
+
       return;
     }
 
-    const messages = await getMessagesService(conversationId, user.userId);
+    const { messages, hasMore } = await getMessagesService(
+      conversationId,
+      user.userId,
+      limit,
+      prevMessageID,
+    );
+
+    console.log("RESULT ->", messages, hasMore);
 
     res.statusCode = 200;
 
     res.end(
       JSON.stringify({
         messages,
+        hasMore,
       }),
     );
   } catch (error) {

@@ -95,7 +95,7 @@ export const websocket_Message_Switch = async (ws, connectedUsers, message) => {
         for (const participant of participants) {
           const participantID = participant.user_id;
 
-          const userSockets = connectedUsers.get(participantID);
+          const userSockets = connectedUsers.get(participantID) ?? new Set();
 
           for (const socket of userSockets) {
             if (socket.readyState === WebSocket.OPEN) {

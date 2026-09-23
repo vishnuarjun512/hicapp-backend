@@ -4,11 +4,11 @@ import {
 } from "../services/message.service.js";
 
 import { BodyReader } from "../utils/dataReader.js";
-import { verifyToken } from "../utils/jwt.js";
+import { requireAuthenticatedUser, verifyToken } from "../utils/jwt.js";
 
 export const getMessages = async (req, res, conversationId) => {
   try {
-    const user = verifyToken(req);
+    const { userId } = requireAuthenticatedUser(req);
 
     const url = new URL(req.url, "http://localhost:3000");
 
@@ -17,33 +17,15 @@ export const getMessages = async (req, res, conversationId) => {
 
     const limit = limitParam ? Number(limitParam) : 10;
 
-    console.log("Search Params ->", {
-      limit,
-      prevMessageID,
-    });
-
-    if (!user) {
-      res.statusCode = 401;
-
-      res.end(
-        JSON.stringify({
-          message: "Authentication required",
-        }),
-      );
-
-      return;
-    }
-
     const { messages, hasMore } = await getMessagesService(
       conversationId,
-      user.userId,
+      userId,
       limit,
       prevMessageID,
     );
 
     res.statusCode = 200;
 
-    console.log("Has More -> ", hasMore);
     res.end(
       JSON.stringify({
         messages,

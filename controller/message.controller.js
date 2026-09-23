@@ -41,10 +41,9 @@ export const getMessages = async (req, res, conversationId) => {
       prevMessageID,
     );
 
-    console.log("RESULT ->", messages, hasMore);
-
     res.statusCode = 200;
 
+    console.log("Has More -> ", hasMore);
     res.end(
       JSON.stringify({
         messages,

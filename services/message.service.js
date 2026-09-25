@@ -1,8 +1,7 @@
 import pool from "../config/db.js";
-import {
-  createConversationIndexesQuery,
-  createMessagesTableQuery,
-} from "../query/create-tables.js";
+import { createMessagesTableQuery } from "../query/create-tables/message.js";
+
+import { createConversationIndexesQuery } from "../query/create-tables/conversation.js";
 
 export const createMessageTableService = async () => {
   try {

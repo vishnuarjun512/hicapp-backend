@@ -2,7 +2,7 @@ import pool from "../config/db.js";
 import {
   createConversationParticipantsTableQuery,
   createConversationTableQuery,
-} from "../query/create-tables.js";
+} from "../query/create-tables/conversation.js";
 
 export const createConversationTableService = async () => {
   try {
@@ -70,7 +70,11 @@ export const createConversationService = async (userId, otherUserId) => {
         ($1, $3);
     `;
 
-    await client.query(participantsQuery, [conversation.id, userId, otherUserId]);
+    await client.query(participantsQuery, [
+      conversation.id,
+      userId,
+      otherUserId,
+    ]);
 
     await client.query("COMMIT");
 

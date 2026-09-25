@@ -2,7 +2,7 @@ import pool from "../config/db.js";
 import {
   createPostImagesTableQuery,
   createPostTableQuery,
-} from "../query/create-tables.js";
+} from "../query/create-tables/post.js";
 import { getImageUploadURL } from "../utils/aws-s3.js";
 
 export const createPostTableService = async () => {

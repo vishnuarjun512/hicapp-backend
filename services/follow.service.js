@@ -1,8 +1,4 @@
 import pool from "../config/db.js";
-import {
-  createFollowRequestTableQuery,
-  createFollowTableQuery,
-} from "../query/create-tables.js";
 
 export const createFollowService = async (followerId, followingId) => {
   try {

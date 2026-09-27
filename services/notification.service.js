@@ -6,7 +6,7 @@ export const createNotificationService = async ({
   type,
   postId = null,
   commentId = null,
-  friendRequestId = null,
+  followRequestID = null,
 }) => {
   const query = `
         INSERT INTO notifications (
@@ -27,8 +27,20 @@ export const createNotificationService = async ({
     type,
     postId,
     commentId,
-    friendRequestId,
+    followRequestID,
   ]);
+
+  return result.rows[0];
+};
+
+export const deleteNotificationService = async (follow_request_id) => {
+  const query = `
+        DELETE from notifications
+        WHERE follow_request_id = $1
+        RETURNING *;
+    `;
+
+  const result = await pool.query(query, [follow_request_id]);
 
   return result.rows[0];
 };

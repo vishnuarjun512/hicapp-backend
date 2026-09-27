@@ -1,4 +1,3 @@
-import jwt from "jsonwebtoken";
 import { BodyReader } from "../utils/dataReader.js";
 import { readJWT } from "../utils/jwt.js";
 import { hashPassword, verifyPassword } from "../utils/password.js";
@@ -14,52 +13,8 @@ import {
   recordFailedLogin,
 } from "../middleware/rate-limit.js";
 import { redisDelete, redisGet, redisSet } from "../utils/redis.js";
-
-const ACCESS_TOKEN_MAX_AGE_IN_MINUTES = 10;
-const REFRESH_TOKEN_MAX_AGE_IN_MINUTES = 20;
-const ACCESS_TOKEN_MAX_AGE = ACCESS_TOKEN_MAX_AGE_IN_MINUTES * 60;
-const REFRESH_TOKEN_MAX_AGE = REFRESH_TOKEN_MAX_AGE_IN_MINUTES * 60;
-
-const cookieOptions = (maxAge) => {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  return `HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
-};
-
-const createToken = (userId, expiresIn) =>
-  jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn });
-
-const setSessionCookies = (res, userId) => {
-  const accessToken = createToken(
-    userId,
-    `${ACCESS_TOKEN_MAX_AGE_IN_MINUTES}m`,
-  );
-  const refreshToken = createToken(
-    userId,
-    `${REFRESH_TOKEN_MAX_AGE_IN_MINUTES}m`,
-  );
-
-  res.setHeader("Set-Cookie", [
-    `hicappAccessToken=${accessToken}; ${cookieOptions(ACCESS_TOKEN_MAX_AGE)}`,
-    `hicappRefreshToken=${refreshToken}; ${cookieOptions(REFRESH_TOKEN_MAX_AGE)}`,
-  ]);
-
-  return { accessToken, refreshToken };
-};
-
-const validateCredentials = ({ email, password }) => {
-  if (
-    typeof email !== "string" ||
-    !email.trim() ||
-    typeof password !== "string" ||
-    password.length < 8
-  ) {
-    const error = new Error(
-      "Email and a password of at least 8 characters are required",
-    );
-    error.statusCode = 400;
-    throw error;
-  }
-};
+import { validateCredentials } from "../utils/validation.js";
+import { setSessionCookies } from "../utils/cookies.js";
 
 export const signInUser = async (req, res) => {
   try {
@@ -112,15 +67,20 @@ export const signInUser = async (req, res) => {
 
     const { password: _password, ...safeUser } = user;
 
-    const { accessToken, refreshToken } = setSessionCookies(res, user.id);
+    const {
+      accessToken,
+      refreshToken,
+      accessTokenDuration,
+      refreshTokenDuration,
+    } = setSessionCookies(res, user.id);
 
     return sendJson(res, 200, {
       message: "Sign In Success",
       user: safeUser,
       accessToken,
       refreshToken,
-      accessToken_Duration: ACCESS_TOKEN_MAX_AGE_IN_MINUTES,
-      refreshToken_Duration: REFRESH_TOKEN_MAX_AGE_IN_MINUTES,
+      accessToken_Duration: accessTokenDuration,
+      refreshToken_Duration: refreshTokenDuration,
     });
   } catch (error) {
     console.error("LOGIN ERROR -", error);

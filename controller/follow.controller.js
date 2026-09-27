@@ -14,6 +14,10 @@ import {
   getSuggestedUsersService,
 } from "../services/follow.service.js";
 import { requireAuthenticatedUser } from "../utils/jwt.js";
+import {
+  createNotificationService,
+  deleteNotificationService,
+} from "../services/notification.service.js";
 
 export const followUser = async (req, res, receiver_id) => {
   try {
@@ -26,7 +30,19 @@ export const followUser = async (req, res, receiver_id) => {
     }
 
     if (receiver.is_private) {
-      await createFollowRequestService(sender_id, receiver_id);
+      const { followRequestID } = await createFollowRequestService(
+        sender_id,
+        receiver_id,
+      );
+
+      await createNotificationService({
+        recipientId: receiver_id,
+        actorId: sender_id,
+        type: "follow_request",
+        postId: null,
+        commentId: null,
+        followRequestID: followRequestID,
+      });
 
       res.statusCode = 200;
 
@@ -126,6 +142,12 @@ export const acceptFollowRequest = async (req, res, sender_id) => {
 
     await deleteFollowRequestService(request.id);
 
+    await createNotificationService({
+      recipientId: request.sender_id,
+      actorId: request.receiver_id,
+      type: "follow_request_accepted",
+    });
+
     res.statusCode = 200;
 
     res.end(
@@ -165,6 +187,8 @@ export const rejectFollowRequest = async (req, res, sender_id) => {
     }
 
     await deleteFollowRequestService(request.id);
+
+    await deleteNotificationService(request.id);
 
     res.statusCode = 200;
 

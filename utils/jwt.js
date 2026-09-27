@@ -29,7 +29,6 @@ export const getTokenFromCookie = (req) => {
 
 export const verifyToken = (req) => {
   const token = getTokenFromCookie(req);
-
   if (!token) {
     return null;
   }
@@ -39,6 +38,7 @@ export const verifyToken = (req) => {
 
 export const requireAuthenticatedUser = (req) => {
   const user = verifyToken(req);
+
   if (!user?.userId) {
     const error = new Error("Authentication required");
     error.statusCode = 401;
@@ -46,3 +46,6 @@ export const requireAuthenticatedUser = (req) => {
   }
   return user;
 };
+
+export const createToken = (userId, expiresIn) =>
+  jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn });

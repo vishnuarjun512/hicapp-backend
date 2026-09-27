@@ -57,7 +57,7 @@ export const createFollowRequestService = async (senderId, receiverId) => {
     const query = `
       INSERT INTO follow_request (sender_id, receiver_id)
       VALUES ($1, $2)
-      RETURNING *;
+      RETURNING id;
     `;
 
     const result = await pool.query(query, [senderId, receiverId]);

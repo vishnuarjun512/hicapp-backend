@@ -1,10 +1,12 @@
 import pool from "../config/db.js";
 
 export const createNotificationService = async ({
+  client,
   recipientId,
   actorId,
   type,
   postId = null,
+  likeId = null,
   commentId = null,
   followRequestID = null,
 }) => {
@@ -14,18 +16,20 @@ export const createNotificationService = async ({
             actor_id,
             type,
             post_id,
+            like_id,
             comment_id,
             follow_request_id
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *;
     `;
 
-  const result = await pool.query(query, [
+  const result = await client.query(query, [
     recipientId,
     actorId,
     type,
     postId,
+    likeId,
     commentId,
     followRequestID,
   ]);
@@ -33,7 +37,9 @@ export const createNotificationService = async ({
   return result.rows[0];
 };
 
-export const deleteNotificationService = async (follow_request_id) => {
+export const deleteNotificationByFollowRequestIDService = async (
+  follow_request_id,
+) => {
   const query = `
         DELETE from notifications
         WHERE follow_request_id = $1

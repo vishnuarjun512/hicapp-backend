@@ -1,6 +1,11 @@
 import pool from "../config/db.js";
 
-export const likePostService = async (postId, userId, reaction = "like") => {
+export const likePostService = async (
+  client,
+  postId,
+  userId,
+  reaction = "like",
+) => {
   try {
     const query = `
     INSERT INTO likes
@@ -9,7 +14,7 @@ export const likePostService = async (postId, userId, reaction = "like") => {
     RETURNING *
     `;
 
-    const result = await pool.query(query, [postId, userId, reaction]);
+    const result = await client.query(query, [postId, userId, reaction]);
     return result.rows[0];
   } catch (error) {
     console.log("LIKE POST SERVICE ERROR - ", error);

@@ -7,6 +7,7 @@ export const createNotificationTableQuery = ` CREATE TABLE IF NOT EXISTS notific
         type TEXT NOT NULL,
 
         post_id UUID,
+        like_id UUID,
         comment_id UUID,
         follow_request_id UUID,
 
@@ -27,6 +28,11 @@ export const createNotificationTableQuery = ` CREATE TABLE IF NOT EXISTS notific
         CONSTRAINT fk_notifications_post
             FOREIGN KEY (post_id)
             REFERENCES posts(id)
+            ON DELETE CASCADE,
+        
+        CONSTRAINT fk_notifications_like
+            FOREIGN KEY (like_id)
+            REFERENCES likes(id)
             ON DELETE CASCADE,
 
         CONSTRAINT fk_notifications_comment

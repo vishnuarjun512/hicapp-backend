@@ -35,8 +35,7 @@ export function userRoutes(req, res) {
     req.method == "PATCH" &&
     req.url.startsWith("/api/user/toggleIsPrivate/")
   ) {
-    const userId = req.url.split("/").pop();
-    togglePrivate(req, res, userId);
+    togglePrivate(req, res);
     return true;
   }
 

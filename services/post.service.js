@@ -27,7 +27,7 @@ export const createPostImagesTableService = async () => {
   }
 };
 
-export const getPostByIdService = async (postId) => {
+export const getPostByIdService = async (client, postId) => {
   try {
     const query = `
       SELECT
@@ -70,10 +70,10 @@ export const getPostByIdService = async (postId) => {
       WHERE p.id = $1
     `;
 
-    const post = await pool.query(query, [postId]);
+    const post = await client.query(query, [postId]);
     return post.rows[0];
   } catch (error) {
-    console.log("DELETE POST BY ID ERROR - ", error);
+    console.log("GET POST BY ID ERROR - ", error);
     throw error;
   }
 };

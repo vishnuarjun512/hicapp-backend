@@ -9,6 +9,7 @@ import {
 import { BodyReader } from "../utils/dataReader.js";
 import { getPostByIdService } from "../services/post.service.js";
 import { createNotificationService } from "../services/notification.service.js";
+import pool from "../config/db.js";
 
 export const getCommentsByPostID = async (req, res, postID) => {
   try {
@@ -32,6 +33,7 @@ export const getCommentsByPostID = async (req, res, postID) => {
 };
 
 export const createComment = async (req, res, postID) => {
+  const client = await pool.connect();
   try {
     const { userId } = requireAuthenticatedUser(req);
     const { body } = await BodyReader(req);
@@ -52,6 +54,7 @@ export const createComment = async (req, res, postID) => {
 
     if (post.author.id != userId) {
       await createNotificationService({
+        client,
         recipientId: post.author.id,
         actorId: userId,
         type: "post_comment",

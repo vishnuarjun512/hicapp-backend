@@ -114,18 +114,9 @@ export const editProfile = async (req, res, id) => {
   }
 };
 
-export const togglePrivate = async (req, res, id) => {
+export const togglePrivate = async (req, res) => {
   try {
     const { userId } = requireAuthenticatedUser(req);
-    if (userId !== id) {
-      res.statusCode = 403;
-      res.end(
-        JSON.stringify({
-          message: "You can only change your own privacy setting",
-        }),
-      );
-      return;
-    }
     const data = await BodyReader(req);
     const { is_private } = data;
     if (typeof is_private !== "boolean") {
@@ -133,7 +124,7 @@ export const togglePrivate = async (req, res, id) => {
       res.end(JSON.stringify({ message: "is_private must be a boolean" }));
       return;
     }
-    await toggleIsPrivateService(id, is_private);
+    await toggleIsPrivateService(userId, is_private);
     res.statusCode = 200;
     res.end(
       JSON.stringify({

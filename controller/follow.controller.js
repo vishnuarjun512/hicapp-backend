@@ -1,4 +1,3 @@
-import { BodyReader } from "../utils/dataReader.js";
 import { getUserByIdService } from "../services/user.service.js";
 import {
   createFollowRequestService,
@@ -14,12 +13,12 @@ import {
   getSuggestedUsersService,
 } from "../services/follow.service.js";
 import { requireAuthenticatedUser } from "../utils/jwt.js";
-import {
-  createNotificationService,
-  deleteNotificationService,
-} from "../services/notification.service.js";
+import { createNotificationService } from "../services/notification.service.js";
+import { BodyReader } from "../utils/dataReader.js";
+import pool from "../config/db.js";
 
 export const followUser = async (req, res, receiver_id) => {
+  const client = await pool.connect();
   try {
     const { userId: sender_id } = requireAuthenticatedUser(req);
 
@@ -30,18 +29,16 @@ export const followUser = async (req, res, receiver_id) => {
     }
 
     if (receiver.is_private) {
-      const { followRequestID } = await createFollowRequestService(
-        sender_id,
-        receiver_id,
-      );
+      const { id } = await createFollowRequestService(sender_id, receiver_id);
 
       await createNotificationService({
+        client,
         recipientId: receiver_id,
         actorId: sender_id,
         type: "follow_request",
         postId: null,
         commentId: null,
-        followRequestID: followRequestID,
+        followRequestID: id,
       });
 
       res.statusCode = 200;
@@ -121,6 +118,7 @@ export const unfollowUser = async (req, res, following_id) => {
 };
 
 export const acceptFollowRequest = async (req, res, sender_id) => {
+  const client = await pool.connect();
   try {
     const { userId: receiver_id } = requireAuthenticatedUser(req);
 
@@ -143,6 +141,7 @@ export const acceptFollowRequest = async (req, res, sender_id) => {
     await deleteFollowRequestService(request.id);
 
     await createNotificationService({
+      client,
       recipientId: request.sender_id,
       actorId: request.receiver_id,
       type: "follow_request_accepted",
@@ -170,7 +169,8 @@ export const acceptFollowRequest = async (req, res, sender_id) => {
 
 export const rejectFollowRequest = async (req, res, sender_id) => {
   try {
-    const { userId: receiver_id } = requireAuthenticatedUser(req);
+    requireAuthenticatedUser(req);
+    const { receiver_id } = await BodyReader(req);
 
     const request = await getFollowRequestService(sender_id, receiver_id);
 
@@ -187,8 +187,6 @@ export const rejectFollowRequest = async (req, res, sender_id) => {
     }
 
     await deleteFollowRequestService(request.id);
-
-    await deleteNotificationService(request.id);
 
     res.statusCode = 200;
 

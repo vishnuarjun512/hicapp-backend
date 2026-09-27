@@ -11,6 +11,7 @@ export const likePostController = async (req, res, postId) => {
     const { userId } = requireAuthenticatedUser(req);
 
     const post = await getPostByIdService(postId);
+
     if (!post) {
       res.statusCode = 404;
       res.end(
@@ -22,12 +23,14 @@ export const likePostController = async (req, res, postId) => {
 
     const like = await likePostService(postId, userId);
 
-    await createNotificationService({
-      recipientId: post.user_id,
-      actorId: userId,
-      type: "post_like",
-      postId: postId,
-    });
+    if (post.author.id != userId) {
+      await createNotificationService({
+        recipientId: post.author.id,
+        actorId: userId,
+        type: "post_like",
+        postId: postId,
+      });
+    }
 
     res.statusCode = 201;
     res.end(JSON.stringify({ like, message: "Liked Post Successfully" }));

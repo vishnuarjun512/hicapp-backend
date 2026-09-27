@@ -7,6 +7,8 @@ import {
   updateCommentService,
 } from "../services/comment.service.js";
 import { BodyReader } from "../utils/dataReader.js";
+import { getPostByIdService } from "../services/post.service.js";
+import { createNotificationService } from "../services/notification.service.js";
 
 export const getCommentsByPostID = async (req, res, postID) => {
   try {
@@ -34,7 +36,30 @@ export const createComment = async (req, res, postID) => {
     const { userId } = requireAuthenticatedUser(req);
     const { body } = await BodyReader(req);
     const { id } = await createCommentService(postID, userId, body);
+
+    const post = await getPostByIdService(postID);
+
+    if (!post) {
+      res.statusCode = 404;
+      res.end(
+        JSON.stringify({
+          message: "Post not found",
+        }),
+      );
+    }
+
     const newComment = await getCommentByIDService(id);
+
+    if (post.author.id != userId) {
+      await createNotificationService({
+        recipientId: post.author.id,
+        actorId: userId,
+        type: "post_comment",
+        postId: postID,
+        commentId: newComment.id,
+      });
+    }
+
     res.statusCode = 201;
     res.end(
       JSON.stringify({ newComment, message: "Comment Created Successfully" }),

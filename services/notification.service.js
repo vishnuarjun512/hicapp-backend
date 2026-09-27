@@ -15,7 +15,7 @@ export const createNotificationService = async ({
             type,
             post_id,
             comment_id,
-            friend_request_id
+            follow_request_id
         )
         VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING *;
@@ -35,12 +35,25 @@ export const createNotificationService = async ({
 
 export const getNotificationByRecipentID = async (recipientId) => {
   const query = `  
-    SELECT *
-    FROM notifications
-    WHERE recipient_id = $1
-    ORDER BY created_at DESC
+    SELECT 
+      n.created_at,
+      n.id,
+      n.is_read,
+      n.post_id,
+      n.type,
+      json_build_object(
+        'id', u.id,
+        'name', u.name,
+        'handle', u.handle,
+        'profile_pic_url', u.profile_pic_url
+      ) AS actor
+
+    FROM notifications n
+    JOIN users u
+      ON n.actor_id = u.id
+    WHERE n.recipient_id = $1
+    ORDER BY n.created_at DESC
     LIMIT 20;
-    RETURNING *;
     `;
 
   const result = await pool.query(query, [recipientId]);

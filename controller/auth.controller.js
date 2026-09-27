@@ -81,7 +81,7 @@ export const signInUser = async (req, res) => {
     if (!user) {
       console.log("Redis Miss");
       user = await getUserForAuthenticationService(email);
-      await redisSet(`user:${email}`, JSON.stringify(user), 15 * 60);
+      await redisSet(`user:${email}`, JSON.stringify(user), 5 * 60);
     } else {
       console.log("Redis Hit");
     }

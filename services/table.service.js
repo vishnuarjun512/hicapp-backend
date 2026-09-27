@@ -11,8 +11,8 @@ import {
 } from "../query/create-tables/follow.js";
 
 import {
-  createNotificationTable,
   createIndexesForNotificationTableQuery,
+  createNotificationTableQuery,
 } from "../query/create-tables/notification.js";
 
 export const createUsersTableService = async () => {
@@ -71,7 +71,7 @@ export const createIndexesForLikesAndCommentsService = async () => {
 
 export const createNotificationTableAndIndexes = async () => {
   try {
-    await pool.query(createNotificationTable);
+    await pool.query(createNotificationTableQuery);
     await pool.query(createIndexesForNotificationTableQuery);
     console.log("✅ Notifications and Indexes created");
   } catch (error) {

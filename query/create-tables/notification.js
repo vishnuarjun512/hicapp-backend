@@ -1,5 +1,4 @@
-export const createNotificationTable = () => {
-  ` CREATE TABLE IF NOT EXISTS notifications (
+export const createNotificationTableQuery = ` CREATE TABLE IF NOT EXISTS notifications (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
         recipient_id UUID NOT NULL,
@@ -9,7 +8,7 @@ export const createNotificationTable = () => {
 
         post_id UUID,
         comment_id UUID,
-        friend_request_id UUID,
+        follow_request_id UUID,
 
         is_read BOOLEAN NOT NULL DEFAULT FALSE,
 
@@ -35,18 +34,15 @@ export const createNotificationTable = () => {
             REFERENCES comments(id)
             ON DELETE CASCADE,
 
-        CONSTRAINT fk_notifications_friend_request
-            FOREIGN KEY (friend_request_id)
-            REFERENCES friend_requests(id)
+        CONSTRAINT fk_notifications_follow_request
+            FOREIGN KEY (follow_request_id)
+            REFERENCES follow_request(id)
             ON DELETE CASCADE
     );`;
-};
 
-export const createIndexesForNotificationTableQuery = () => {
-  `CREATE INDEX idx_notifications_recipient_created
+export const createIndexesForNotificationTableQuery = `CREATE INDEX idx_notifications_recipient_created
         ON notifications (recipient_id, created_at DESC);
     
     CREATE INDEX idx_notifications_recipient_unread
         ON notifications (recipient_id, is_read)
         WHERE is_read = FALSE;`;
-};

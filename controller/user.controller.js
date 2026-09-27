@@ -19,6 +19,7 @@ import { BodyReader } from "../utils/dataReader.js";
 
 import { getConversationsService } from "../services/conversation.service.js";
 import { requireAuthenticatedUser } from "../utils/jwt.js";
+import { getNotificationByRecipentID } from "../services/notification.service.js";
 
 export const getUsersController = async (req, res) => {
   try {
@@ -174,6 +175,7 @@ export const getProfileData = async (req, res, userId) => {
         ? await getFeedPostsService(user.id)
         : await getPostsByUserIdService(user.id);
     const conversations = await getConversationsService(user.id);
+    const notifications = await getNotificationByRecipentID(user.id);
 
     res.statusCode = 200;
     res.end(
@@ -183,6 +185,7 @@ export const getProfileData = async (req, res, userId) => {
         posts,
         conversations,
         suggested,
+        notifications,
       }),
     );
   } catch (error) {

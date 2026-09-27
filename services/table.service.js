@@ -2,9 +2,18 @@ import {
   createCommentTableQuery,
   createIndexesForLikesAndCommentsQuery,
   createLikeTableQuery,
-  createUsersTableQuery,
-} from "../query/create-tables.js";
+} from "../query/create-tables/like-comment.js";
 import pool from "../config/db.js";
+import { createUsersTableQuery } from "../query/create-tables/user.js";
+import {
+  createFollowTableQuery,
+  createFollowRequestTableQuery,
+} from "../query/create-tables/follow.js";
+
+import {
+  createNotificationTable,
+  createIndexesForNotificationTableQuery,
+} from "../query/create-tables/notification.js";
 
 export const createUsersTableService = async () => {
   try {
@@ -13,6 +22,19 @@ export const createUsersTableService = async () => {
     console.log("✅ Users table created");
   } catch (error) {
     console.error("❌ Failed to create users table:", error);
+  }
+};
+
+export const createFollowTables = async () => {
+  try {
+    await pool.query(createFollowTableQuery);
+    console.log("✅ Follow table created");
+
+    await pool.query(createFollowRequestTableQuery);
+    console.log("✅ Follow request table created");
+  } catch (error) {
+    console.log("CREATE FOLLOW TABLE SERVICE ERROR - ", error);
+    throw error;
   }
 };
 
@@ -44,6 +66,17 @@ export const createIndexesForLikesAndCommentsService = async () => {
       "❌ Failed to create Indexes for likes and comments table:",
       error,
     );
+  }
+};
+
+export const createNotificationTableAndIndexes = async () => {
+  try {
+    await pool.query(createNotificationTable);
+    await pool.query(createIndexesForNotificationTableQuery);
+    console.log("✅ Notifications and Indexes created");
+  } catch (error) {
+    console.log("CREATE NOTIFICAIOTN TABLE SERVICE ERROR - ", error);
+    throw error;
   }
 };
 

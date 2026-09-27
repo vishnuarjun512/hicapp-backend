@@ -233,16 +233,3 @@ export const getSuggestedUsersService = async (userId) => {
     throw error;
   }
 };
-
-export const createFollowTables = async () => {
-  try {
-    await pool.query(createFollowTableQuery);
-    console.log("✅ Follow table created");
-
-    await pool.query(createFollowRequestTableQuery);
-    console.log("✅ Follow request table created");
-  } catch (error) {
-    console.log("CREATE FOLLOW TABLE SERVICE ERROR - ", error);
-    throw error;
-  }
-};

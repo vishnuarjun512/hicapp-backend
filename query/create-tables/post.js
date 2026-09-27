@@ -21,7 +21,7 @@ export const createPostTableQuery = `
     `;
 
 export const createPostImagesTableQuery = `
-    CREATE TABLE post_images (
+    CREATE TABLE IF NOT EXISTS post_images  (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
         post_id UUID NOT NULL,

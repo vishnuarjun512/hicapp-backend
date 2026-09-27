@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import http from "http";
 import pool from "./config/db.js";
+import redisClient from "./config/redis.js";
 import { userRoutes } from "./routes/user.route.js";
 import { postRoutes } from "./routes/post.route.js";
 import { followRoutes } from "./routes/follow.route.js";
@@ -89,12 +90,14 @@ async function startServer() {
     await pool.query("SELECT 1");
     console.log("POSTGRESQL Connected");
 
+    await redisClient.connect();
+    console.log("Redis Connected");
+
     setupWebSocket(server);
     server.listen(PORT, "0.0.0.0", () => {
       console.log(`Server is running on http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error("❌ PostgreSQL connection failed:");
     console.error("Error - ", error);
     process.exit(1);
   }

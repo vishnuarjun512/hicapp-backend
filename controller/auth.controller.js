@@ -9,6 +9,12 @@ import {
   updateUserPasswordService,
 } from "../services/user.service.js";
 
+import {
+  checkLoginRateLimit,
+  recordFailedLogin,
+} from "../middleware/rate-limit.js";
+import { redisDelete, redisGet, redisSet } from "../utils/redis.js";
+
 const ACCESS_TOKEN_MAX_AGE_IN_MINUTES = 10;
 const REFRESH_TOKEN_MAX_AGE_IN_MINUTES = 20;
 const ACCESS_TOKEN_MAX_AGE = ACCESS_TOKEN_MAX_AGE_IN_MINUTES * 60;
@@ -57,19 +63,45 @@ const validateCredentials = ({ email, password }) => {
 
 export const signInUser = async (req, res) => {
   try {
+    const allowed = await checkLoginRateLimit(req, res);
+
+    if (!allowed) {
+      return sendError(res, 429, "Too many login attempts. Try again later.");
+    }
+
     const credentials = await BodyReader(req);
+
     // validateCredentials(credentials);
-    const user = await getUserForAuthenticationService(
-      credentials.email.trim(),
-    );
-    if (!user) return sendError(res, 401, "Invalid email or password");
+    const email = credentials.email.trim().toLowerCase();
+
+    const cachedUser = await redisGet(`user:${email}`);
+
+    let user = cachedUser ? JSON.parse(cachedUser) : null;
+
+    if (!user) {
+      console.log("Redis Miss");
+      user = await getUserForAuthenticationService(email);
+      await redisSet(`user:${email}`, JSON.stringify(user), 15 * 60);
+    } else {
+      console.log("Redis Hit");
+    }
+
+    if (!user) {
+      await recordFailedLogin(req);
+      await redisDelete(`user:${email}`);
+      return sendError(res, 401, "Invalid email or password");
+    }
 
     // Existing plaintext passwords are upgraded on the user's next successful login.
     const passwordMatches = user.password.startsWith("scrypt:")
       ? await verifyPassword(credentials.password, user.password)
       : credentials.password === user.password;
-    if (!passwordMatches)
+
+    if (!passwordMatches) {
+      await recordFailedLogin(req);
+      await redisDelete(`user:${email}`);
       return sendError(res, 401, "Invalid email or password");
+    }
 
     if (!user.password.startsWith("scrypt:")) {
       await updateUserPasswordService(
@@ -81,6 +113,7 @@ export const signInUser = async (req, res) => {
     const { password: _password, ...safeUser } = user;
 
     const { accessToken, refreshToken } = setSessionCookies(res, user.id);
+
     return sendJson(res, 200, {
       message: "Sign In Success",
       user: safeUser,
@@ -111,6 +144,7 @@ export const registerUser = async (req, res) => {
       email,
       await hashPassword(credentials.password),
     );
+
     return sendJson(res, 201, { message: "Created User Successfully", user });
   } catch (error) {
     console.error("CREATE USER ERROR -", error);

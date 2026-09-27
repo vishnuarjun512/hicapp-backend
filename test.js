@@ -5,6 +5,7 @@ import {
   createCommentTableService,
   createLikeTableService,
   createUsersTableService,
+  createNotificationTableAndIndexes,
 } from "./services/table.service.js";
 import {
   createPostImagesTableService,
@@ -12,7 +13,7 @@ import {
   createPostTableService,
   getPostsByUserIdService,
 } from "./services/post.service.js";
-import { createFollowTables } from "./services/follow.service.js";
+import { createFollowTables } from "./services/table.service.js";
 import { createConversationTableService } from "./services/conversation.service.js";
 import {
   createIndexesForMessagesAndConversationService,
@@ -67,6 +68,7 @@ async function main() {
           await createLikeTableService();
           await createCommentTableService();
           await createIndexesForMessagesAndConversationService();
+          await createNotificationTableAndIndexes();
 
           console.log("✅ All tables are ready.");
           break;

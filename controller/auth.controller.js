@@ -29,9 +29,7 @@ export const signInUser = async (req, res) => {
     // validateCredentials(credentials);
     const email = credentials.email.trim().toLowerCase();
 
-    const cachedUser = await redisGet(`user:${email}`);
-
-    let user = cachedUser ? JSON.parse(cachedUser) : null;
+    const user = await redisGet(`user:${email}`);
 
     if (!user) {
       console.log("Redis Miss");

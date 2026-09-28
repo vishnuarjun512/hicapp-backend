@@ -29,6 +29,5 @@ export const setSessionCookies = (res, userId) => {
 };
 
 export const cookieOptions = (maxAge) => {
-  const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-  return `HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=Lax${secure}`;
+  return `HttpOnly; Path=/; Max-Age=${maxAge}; SameSite=None; Secure`;
 };

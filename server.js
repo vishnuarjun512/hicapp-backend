@@ -90,8 +90,8 @@ async function startServer() {
     await pool.query("SELECT 1");
     console.log("POSTGRESQL Connected");
 
-    await redisClient.connect();
-    console.log("Redis Connected");
+    const redisResponse = await redisClient.ping();
+    console.log("Redis Connected:", redisResponse);
 
     setupWebSocket(server);
     server.listen(PORT, "0.0.0.0", () => {

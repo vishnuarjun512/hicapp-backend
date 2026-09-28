@@ -15,6 +15,7 @@
     "@aws-sdk/client-s3": "^3.1134.0",
     "@aws-sdk/s3-request-presigner": "^3.1134.0",
     "@supabase/server": "^1.4.1",
+    "@upstash/redis": "^1.39.0",
     "dotenv": "^17.4.2",
     "jsonwebtoken": "^9.0.3",
     "nodemon": "^3.1.14",

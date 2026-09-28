@@ -12,7 +12,7 @@ export const readJWT = (token) => {
 
 export const getTokenFromCookie = (req) => {
   const cookies = req.headers.cookie;
-
+  console.log("ALL Cookies -> ", cookies);
   if (!cookies) {
     return null;
   }
@@ -21,6 +21,7 @@ export const getTokenFromCookie = (req) => {
     .split("; ")
     .find((cookie) => cookie.startsWith("hicappAccessToken="));
 
+  console.log("Cookie -> ", cookie);
   if (!cookie) {
     return null;
   }
@@ -29,6 +30,7 @@ export const getTokenFromCookie = (req) => {
 
 export const verifyToken = (req) => {
   const token = getTokenFromCookie(req);
+  console.log("TOken -> ", token);
   if (!token) {
     return null;
   }

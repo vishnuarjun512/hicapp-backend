@@ -100,7 +100,7 @@ export const getConversationsService = async (userId) => {
               'id', u.id,
               'name', u.name,
               'handle', u.handle,
-              'profilePic', u."profile_pic_url",
+              'profile_pic_url', u."profile_pic_url",
               'lastReadAt', cp_all.last_read_at
             )
           ) FILTER (WHERE u.id IS NOT NULL),

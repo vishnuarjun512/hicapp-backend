@@ -1,6 +1,7 @@
 import { createPostImageUploadController } from "../controller/image.controller.js";
 import {
   editProfile,
+  getHomePageData,
   getProfileData,
   getUserById,
   getUsersController,
@@ -28,6 +29,11 @@ export function userRoutes(req, res) {
   if (req.method == "GET" && req.url.startsWith("/api/profile")) {
     const userId = req.url.split("/").pop();
     getProfileData(req, res, userId);
+    return true;
+  }
+
+  if (req.method == "GET" && req.url.startsWith("/api/home")) {
+    getHomePageData(req, res);
     return true;
   }
 

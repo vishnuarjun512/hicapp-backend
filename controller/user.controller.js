@@ -90,8 +90,13 @@ export const editProfile = async (req, res, id) => {
     const { name, handle, bio, verified, profilePicUrl } = data;
 
     const user = await getUserByIdService(userId);
+    console.log(
+      user.profile_pic_url &&
+        user.profile_pic_url.length > 0 &&
+        "User already has a profile pic",
+    );
 
-    if (profilePicUrl === null && user.profile_pic_url.length > 0) {
+    if (profilePicUrl === null && !user.profile_pic_url) {
       await deleteProfileImageService(userId);
       console.log("Deleted Profile Image");
     }
@@ -146,9 +151,9 @@ export const togglePrivate = async (req, res) => {
   }
 };
 
-export const getProfileData = async (req, res, userId) => {
+export const getHomePageData = async (req, res) => {
   try {
-    const authenticatedUser = requireAuthenticatedUser(req);
+    const { userId } = requireAuthenticatedUser(req);
 
     const user = await getUserByIdService(userId);
 
@@ -165,10 +170,7 @@ export const getProfileData = async (req, res, userId) => {
     const followers = await getFollowersService(user.id);
     const following = await getFollowingService(user.id);
     const suggested = await getSuggestedUsersService(user.id);
-    const posts =
-      user.id == authenticatedUser.userId
-        ? await getFeedPostsService(user.id)
-        : await getPostsByUserIdService(user.id);
+    const posts = await getFeedPostsService(user.id);
     const conversations = await getConversationsService(user.id);
     const notifications = await getNotificationByRecipentID(user.id);
 
@@ -181,6 +183,46 @@ export const getProfileData = async (req, res, userId) => {
         conversations,
         suggested,
         notifications,
+      }),
+    );
+  } catch (error) {
+    console.log("GET HOME PAGE DATA CONTROLLER ERROR - ", error);
+    res.statusCode = 500;
+    res.end(
+      JSON.stringify({
+        message: "Internal server error",
+      }),
+    );
+  }
+};
+
+export const getProfileData = async (req, res, userId) => {
+  try {
+    requireAuthenticatedUser(req);
+
+    const user = await getUserByIdService(userId);
+
+    if (!user) {
+      res.statusCode = 404;
+      res.end(
+        JSON.stringify({
+          message: "User not found",
+        }),
+      );
+      return;
+    }
+
+    const followers = await getFollowersService(user.id);
+    const following = await getFollowingService(user.id);
+    const posts = await getPostsByUserIdService(user.id);
+
+    res.statusCode = 200;
+    res.end(
+      JSON.stringify({
+        user,
+        followers,
+        following,
+        posts,
       }),
     );
   } catch (error) {

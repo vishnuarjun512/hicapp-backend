@@ -34,6 +34,11 @@ export const signInUser = async (req, res) => {
     if (!user) {
       console.log("Redis Miss");
       user = await getUserForAuthenticationService(email);
+
+      if (!user) {
+        return sendError(res, 401, "Invalid email or password");
+      }
+
       await redisSet(`user:${email}`, user, 5 * 60);
     } else {
       console.log("Redis Hit");

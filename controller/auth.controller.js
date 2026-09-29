@@ -36,7 +36,7 @@ export const signInUser = async (req, res) => {
       user = await getUserForAuthenticationService(email);
 
       if (!user) {
-        return sendError(res, 401, "Invalid email or password");
+        return sendError(res, 404, "User not found");
       }
 
       await redisSet(`user:${email}`, user, 5 * 60);
@@ -47,7 +47,7 @@ export const signInUser = async (req, res) => {
     if (!user) {
       await recordFailedLogin(req);
       await redisDelete(`user:${email}`);
-      return sendError(res, 401, "Invalid email or password");
+      return sendError(res, 404, "User not found");
     }
 
     // Existing plaintext passwords are upgraded on the user's next successful login.
@@ -58,7 +58,7 @@ export const signInUser = async (req, res) => {
     if (!passwordMatches) {
       await recordFailedLogin(req);
       await redisDelete(`user:${email}`);
-      return sendError(res, 401, "Invalid email or password");
+      return sendError(res, 404, "Invalid Credentials");
     }
 
     if (!user.password.startsWith("scrypt:")) {

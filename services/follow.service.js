@@ -1,20 +1,15 @@
 import pool from "../config/db.js";
 
 export const createFollowService = async (followerId, followingId) => {
-  try {
-    const query = `
+  const query = `
       INSERT INTO follow (follower_id, following_id)
       VALUES ($1, $2)
       RETURNING *;
     `;
 
-    const result = await pool.query(query, [followerId, followingId]);
+  const result = await pool.query(query, [followerId, followingId]);
 
-    return result.rows[0];
-  } catch (error) {
-    console.log("CREATE FOLLOW SERVICE ERROR - ", error);
-    throw error;
-  }
+  return result.rows[0];
 };
 
 export const deleteFollowService = async (followerId, followingId) => {

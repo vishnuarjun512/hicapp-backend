@@ -16,6 +16,8 @@ import { requireAuthenticatedUser } from "../utils/jwt.js";
 import { createNotificationService } from "../services/notification.service.js";
 import { BodyReader } from "../utils/dataReader.js";
 import pool from "../config/db.js";
+import { unVerifiedActivites } from "../middleware/unverified.js";
+import { sendError, sendJson } from "../utils/http.js";
 
 export const followUser = async (req, res, receiver_id) => {
   const client = await pool.connect();
@@ -23,10 +25,16 @@ export const followUser = async (req, res, receiver_id) => {
   try {
     const { userId: sender_id } = requireAuthenticatedUser(req);
 
+    const user = await getUserByIdService(sender_id);
+
+    unVerifiedActivites(user);
+
     const receiver = await getUserByIdService(receiver_id);
 
     if (!receiver) {
-      throw new Error("User does not exist!");
+      const error = new Error("User does not exist!");
+      error.statusCode = 404;
+      throw error;
     }
 
     if (receiver.is_private) {
@@ -42,39 +50,29 @@ export const followUser = async (req, res, receiver_id) => {
         followRequestID: id,
       });
 
-      res.statusCode = 200;
-
-      res.end(
-        JSON.stringify({
-          message: "Follow Request Sent to " + receiver.name,
-          request: true,
-        }),
-      );
+      sendJson(res, 200, {
+        message: "Follow Request Sent to " + receiver.name,
+        request: true,
+      });
 
       return;
     }
 
     await createFollowService(sender_id, receiver_id);
 
-    res.statusCode = 200;
-
-    res.end(
-      JSON.stringify({
-        message: "Following " + receiver.name,
-        request: false,
-      }),
-    );
+    sendJson(res, 200, {
+      message: "Following " + receiver.name,
+      request: false,
+    });
 
     return;
   } catch (error) {
     console.log("FOLLOW CONTROLLER ERROR - ", error);
 
-    res.statusCode = 500;
-
-    res.end(
-      JSON.stringify({
-        message: "Internal Server Error",
-      }),
+    sendError(
+      res,
+      error.statusCode ?? 500,
+      error.message ?? "Internal Server Error",
     );
   }
 };

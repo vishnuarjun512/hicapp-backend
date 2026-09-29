@@ -8,6 +8,8 @@ import {
   getFollowingService,
   getFollowersService,
   getSuggestedUsersService,
+  getFollowService,
+  getFollowRequestService,
 } from "../services/follow.service.js";
 import {
   getFeedPostsService,
@@ -198,7 +200,7 @@ export const getHomePageData = async (req, res) => {
 
 export const getProfileData = async (req, res, userId) => {
   try {
-    requireAuthenticatedUser(req);
+    const { userId: selfId } = requireAuthenticatedUser(req);
 
     const user = await getUserByIdService(userId);
 
@@ -215,6 +217,8 @@ export const getProfileData = async (req, res, userId) => {
     const followers = await getFollowersService(user.id);
     const following = await getFollowingService(user.id);
     const posts = await getPostsByUserIdService(user.id);
+    const request = (await getFollowRequestService(selfId, user.id)) ?? null;
+    const follow = (await getFollowService(selfId, user.id)) ?? null;
 
     res.statusCode = 200;
     res.end(
@@ -223,6 +227,8 @@ export const getProfileData = async (req, res, userId) => {
         followers,
         following,
         posts,
+        request,
+        follow,
       }),
     );
   } catch (error) {

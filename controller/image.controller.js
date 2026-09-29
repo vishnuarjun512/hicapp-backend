@@ -23,18 +23,22 @@ export const createPostImageUploadController = async (req, res) => {
       return;
     }
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/avif",
+    ];
 
     if (!allowedTypes.includes(contentType)) {
       res.statusCode = 400;
-
+      const message = "Unsupported image type";
       res.end(
         JSON.stringify({
-          message: "Unsupported image type",
+          message,
         }),
       );
-
-      return;
+      throw new Error(message);
     }
 
     const upload = await getImageUploadURLService(userId, contentType);

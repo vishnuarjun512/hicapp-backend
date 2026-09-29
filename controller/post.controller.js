@@ -11,8 +11,10 @@ import { BodyReader } from "../utils/dataReader.js";
 import { URL } from "node:url";
 import { requireAuthenticatedUser } from "../utils/jwt.js";
 import { deleteS3Object, getS3KeyFromUrl } from "../utils/aws-s3.js";
+import pool from "../config/db.js";
 
 export const createPostController = async (req, res, userId) => {
+  const client = await pool.connect();
   try {
     const authenticatedUser = requireAuthenticatedUser(req);
 
@@ -40,7 +42,7 @@ export const createPostController = async (req, res, userId) => {
       location,
     );
 
-    const post = await getPostByIdService(id);
+    const post = await getPostByIdService(client, id);
 
     res.statusCode = 201;
     res.end(JSON.stringify({ message: "Post Created Successfully", post }));
@@ -84,6 +86,7 @@ export const getPostsControllerByUserID = async (req, res, userId) => {
 };
 
 export const deletePostByIdController = async (req, res, id) => {
+  const client = await pool.connect();
   try {
     const { userId } = requireAuthenticatedUser(req);
 
@@ -91,7 +94,7 @@ export const deletePostByIdController = async (req, res, id) => {
     // 1. Get post
     // -----------------------------------
 
-    const post = await getPostByIdService(id);
+    const post = await getPostByIdService(client, id);
 
     if (!post) {
       res.statusCode = 404;
@@ -147,8 +150,6 @@ export const deletePostByIdController = async (req, res, id) => {
 
     res.statusCode = 200;
 
-    console.log("Post Deleted");
-
     res.end(
       JSON.stringify({
         message: "Post Deleted",
@@ -156,9 +157,7 @@ export const deletePostByIdController = async (req, res, id) => {
     );
   } catch (error) {
     console.log("DELETE POST BY ID CONTROLLER ERROR - ", error);
-
     res.statusCode = 500;
-
     res.end(
       JSON.stringify({
         message: "Internal Server Error",
@@ -218,7 +217,13 @@ export const getPostImageURLS = async (req, res) => {
     // Validate each image
     // -----------------------------
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+      "image/avif",
+    ];
 
     for (const image of images) {
       if (!allowedTypes.includes(image.contentType)) {

@@ -21,11 +21,6 @@ export const deleteProfileImageService = async (userId) => {
 
   const key = `${userId}/profilePic/profilePic.jpeg`;
 
-  console.log("Deleting S3 object:", {
-    bucket,
-    key,
-  });
-
   await deleteS3Object(bucket, key);
 
   console.log("S3 object deleted:", key);

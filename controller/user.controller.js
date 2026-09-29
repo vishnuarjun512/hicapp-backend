@@ -89,15 +89,19 @@ export const editProfile = async (req, res, id) => {
     const data = await BodyReader(req);
     const { name, handle, bio, verified, profilePicUrl } = data;
 
-    if (profilePicUrl === null) {
+    const user = await getUserByIdService(userId);
+
+    if (profilePicUrl === null && user.profile_pic_url.length > 0) {
       await deleteProfileImageService(userId);
       console.log("Deleted Profile Image");
     }
 
     await editProfileService(id, name, handle, bio, verified, profilePicUrl);
+
     res.statusCode = 200;
     res.end(
       JSON.stringify({
+        profilePicUrl,
         error: false,
         message: "Profile Updated Successfully",
       }),

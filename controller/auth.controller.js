@@ -148,7 +148,7 @@ export const refreshToken = async (req, res) => {
 };
 
 export const logoutUser = async (_req, res) => {
-  const expired = "HttpOnly; Path=/; Max-Age=0; SameSite=Lax";
+  const expired = "HttpOnly; Path=/; Max-Age=0; SameSite=None; Secure";
   res.setHeader("Set-Cookie", [
     `hicappAccessToken=; ${expired}`,
     `hicappRefreshToken=; ${expired}`,

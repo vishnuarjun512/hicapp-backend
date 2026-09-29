@@ -3,7 +3,6 @@ import {
   createPostImageUploadURLsService,
   createPostService,
   deletePostByIdService,
-  getPostOwnershipService,
   getPostByIdService,
   getPostsByUserIdService,
 } from "../services/post.service.js";
@@ -12,6 +11,7 @@ import { URL } from "node:url";
 import { requireAuthenticatedUser } from "../utils/jwt.js";
 import { deleteS3Object, getS3KeyFromUrl } from "../utils/aws-s3.js";
 import pool from "../config/db.js";
+import { sendError, sendJson } from "../utils/http.js";
 
 export const createPostController = async (req, res, userId) => {
   const client = await pool.connect();
@@ -97,12 +97,8 @@ export const deletePostByIdController = async (req, res, id) => {
     const post = await getPostByIdService(client, id);
 
     if (!post) {
-      res.statusCode = 404;
-      res.end(
-        JSON.stringify({
-          message: "Post not found",
-        }),
-      );
+      const message = "Post not found";
+      sendError(res, 404, message);
       return;
     }
 
@@ -111,12 +107,8 @@ export const deletePostByIdController = async (req, res, id) => {
     // -----------------------------------
 
     if (post.author.id !== userId) {
-      res.statusCode = 403;
-      res.end(
-        JSON.stringify({
-          message: "You can only delete your own posts",
-        }),
-      );
+      const message = "You can only delete your own posts";
+      sendError(res, 403, message);
       return;
     }
 
@@ -148,20 +140,13 @@ export const deletePostByIdController = async (req, res, id) => {
     // 5. Response
     // -----------------------------------
 
-    res.statusCode = 200;
-
-    res.end(
-      JSON.stringify({
-        message: "Post Deleted",
-      }),
-    );
+    sendJson(res, 200, { message: "Post Deleted" });
   } catch (error) {
     console.log("DELETE POST BY ID CONTROLLER ERROR - ", error);
-    res.statusCode = 500;
-    res.end(
-      JSON.stringify({
-        message: "Internal Server Error",
-      }),
+    sendError(
+      res,
+      error.statusCode ?? 500,
+      error.message ?? "Internal Server Error",
     );
   }
 };

@@ -10,6 +10,9 @@ import { BodyReader } from "../utils/dataReader.js";
 import { getPostByIdService } from "../services/post.service.js";
 import { createNotificationService } from "../services/notification.service.js";
 import pool from "../config/db.js";
+import { unVerifiedActivites } from "../middleware/unverified.js";
+import { getUserByIdService } from "../services/user.service.js";
+import { sendError } from "../utils/http.js";
 
 export const getCommentsByPostID = async (req, res, postID) => {
   try {
@@ -37,17 +40,24 @@ export const createComment = async (req, res, postID) => {
   try {
     const { userId } = requireAuthenticatedUser(req);
     const { body } = await BodyReader(req);
+
+    const user = await getUserByIdService(userId);
+
+    unVerifiedActivites(user);
+
     const { id } = await createCommentService(postID, userId, body);
 
-    const post = await getPostByIdService(postID);
+    const post = await getPostByIdService(client, postID);
 
     if (!post) {
       res.statusCode = 404;
       res.end(
         JSON.stringify({
+          error: true,
           message: "Post not found",
         }),
       );
+      return;
     }
 
     const newComment = await getCommentByIDService(id);
@@ -65,15 +75,18 @@ export const createComment = async (req, res, postID) => {
 
     res.statusCode = 201;
     res.end(
-      JSON.stringify({ newComment, message: "Comment Created Successfully" }),
+      JSON.stringify({
+        newComment,
+        error: false,
+        message: "Comment Created Successfully",
+      }),
     );
   } catch (error) {
     console.log("COMMENTS POST CONTROLLER ERROR - ", error);
-    res.statusCode = 500;
-    res.end(
-      JSON.stringify({
-        message: "Internal Server Error",
-      }),
+    sendError(
+      res,
+      error.statusCode ?? 500,
+      error.message ?? "Internal Server Error",
     );
     return;
   }

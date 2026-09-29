@@ -6,7 +6,7 @@ export const sendJson = (res, statusCode, body) => {
 };
 
 export const sendError = (res, statusCode, message) =>
-  sendJson(res, statusCode, { message });
+  sendJson(res, statusCode, { error: true, message });
 
 export const getPathname = (req) =>
   new URL(req.url, `http://${req.headers.host ?? "localhost"}`).pathname;

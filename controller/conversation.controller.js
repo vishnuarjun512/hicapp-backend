@@ -3,22 +3,17 @@ import {
   getConversationsService,
 } from "../services/conversation.service.js";
 import { BodyReader } from "../utils/dataReader.js";
-import { requireAuthenticatedUser, verifyToken } from "../utils/jwt.js";
+import { requireAuthenticatedUser } from "../utils/jwt.js";
+import { unVerifiedActivites } from "../middleware/unverified.js";
+import { getUserByIdService } from "../services/user.service.js";
+
+import { sendError } from "../utils/http.js";
 
 export const getConversations = async (req, res) => {
   try {
-    const user = verifyToken(req);
-    if (!user) {
-      res.statusCode = 401;
-      res.end(
-        JSON.stringify({
-          message: "Authentication required",
-        }),
-      );
-      return;
-    }
+    const { userId } = requireAuthenticatedUser(req);
 
-    const conversations = await getConversationsService(user.userId);
+    const conversations = await getConversationsService(userId);
 
     res.statusCode = 200;
     res.end(
@@ -42,6 +37,11 @@ export const getConversations = async (req, res) => {
 export const createConversation = async (req, res) => {
   try {
     const { userId } = requireAuthenticatedUser(req);
+
+    const user = await getUserByIdService(userId);
+
+    unVerifiedActivites(user);
+
     const { otherUserId } = await BodyReader(req);
 
     if (typeof otherUserId !== "string" || !otherUserId) {
@@ -62,12 +62,10 @@ export const createConversation = async (req, res) => {
   } catch (error) {
     console.log("CREATE CONVERSATION CONTROLLER ERROR - ", error);
 
-    res.statusCode = error.statusCode ?? 500;
-
-    res.end(
-      JSON.stringify({
-        message: error.statusCode ? error.message : "Internal Server Error",
-      }),
+    sendError(
+      res,
+      error.statusCode ?? 500,
+      error.message ?? "Internal Server Error",
     );
   }
 };

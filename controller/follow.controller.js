@@ -19,6 +19,7 @@ import pool from "../config/db.js";
 
 export const followUser = async (req, res, receiver_id) => {
   const client = await pool.connect();
+
   try {
     const { userId: sender_id } = requireAuthenticatedUser(req);
 

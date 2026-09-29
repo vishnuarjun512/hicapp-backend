@@ -29,12 +29,12 @@ export const signInUser = async (req, res) => {
     // validateCredentials(credentials);
     const email = credentials.email.trim().toLowerCase();
 
-    const user = await redisGet(`user:${email}`);
+    let user = await redisGet(`user:${email}`);
 
     if (!user) {
       console.log("Redis Miss");
       user = await getUserForAuthenticationService(email);
-      await redisSet(`user:${email}`, JSON.stringify(user), 5 * 60);
+      await redisSet(`user:${email}`, user, 5 * 60);
     } else {
       console.log("Redis Hit");
     }

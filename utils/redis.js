@@ -6,7 +6,7 @@ export const redisGet = async (key) => {
 
 export const redisSet = async (key, value, ttlSeconds) => {
   return await redisClient.set(key, value, {
-    EX: ttlSeconds,
+    ex: ttlSeconds,
   });
 };
 

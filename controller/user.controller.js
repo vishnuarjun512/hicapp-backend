@@ -22,6 +22,7 @@ import { BodyReader } from "../utils/dataReader.js";
 import { getConversationsService } from "../services/conversation.service.js";
 import { requireAuthenticatedUser } from "../utils/jwt.js";
 import { getNotificationByRecipentID } from "../services/notification.service.js";
+import { sendError } from "../utils/http.js";
 
 export const getUsersController = async (req, res) => {
   try {
@@ -189,11 +190,10 @@ export const getHomePageData = async (req, res) => {
     );
   } catch (error) {
     console.log("GET HOME PAGE DATA CONTROLLER ERROR - ", error);
-    res.statusCode = 500;
-    res.end(
-      JSON.stringify({
-        message: "Internal server error",
-      }),
+    sendError(
+      res,
+      error.statusCode ?? 500,
+      error.message ?? "Internal Server Error",
     );
   }
 };
@@ -233,11 +233,10 @@ export const getProfileData = async (req, res, userId) => {
     );
   } catch (error) {
     console.log("GET USER PROFILE DATA BY ID CONTROLLER ERROR - ", error);
-    res.statusCode = 500;
-    res.end(
-      JSON.stringify({
-        message: "Internal server error",
-      }),
+    sendError(
+      res,
+      error.statusCode ?? 500,
+      error.message ?? "Internal Server Error",
     );
   }
 };

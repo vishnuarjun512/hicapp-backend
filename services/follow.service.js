@@ -209,14 +209,21 @@ export const getSuggestedUsersService = async (userId) => {
       )
 
       -- Dont show users I already sent a follow request to
+
       AND NOT EXISTS (
         SELECT 1
         FROM follow_request fr
-        WHERE fr.sender_id = $1
-        AND fr.receiver_id = u.id
+        WHERE
+          (fr.sender_id = $1 AND fr.receiver_id = u.id)
+          OR
+          (fr.sender_id = u.id AND fr.receiver_id = $1)
       )
 
-      ORDER BY u.created_at DESC;
+       -- Only show verified users
+      AND u.verified = true
+
+      ORDER BY u.created_at DESC
+      LIMIT 5;
     `;
 
     const result = await pool.query(query, [userId]);

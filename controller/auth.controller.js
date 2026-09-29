@@ -120,15 +120,31 @@ export const registerUser = async (req, res) => {
 };
 
 export const refreshToken = async (req, res) => {
-  const refreshCookie = req.headers.cookie
-    ?.split("; ")
-    .find((cookie) => cookie.startsWith("hicappRefreshToken="));
-  const refreshValue = refreshCookie?.slice("hicappRefreshToken=".length);
-  const payload = refreshValue && readJWT(refreshValue);
-  if (!payload?.userId) return sendError(res, 401, "Session expired");
+  try {
+    const refreshCookie = req.headers.cookie
+      ?.split("; ")
+      .find((cookie) => cookie.startsWith("hicappRefreshToken="));
 
-  setSessionCookies(res, payload.userId);
-  return sendJson(res, 200, { message: "Token refreshed" });
+    const refreshValue = refreshCookie?.slice("hicappRefreshToken=".length);
+
+    const payload = refreshValue && readJWT(refreshValue);
+
+    if (!payload?.userId) {
+      sendError(res, 401, "Session expired");
+      return;
+    }
+
+    console.log("Token Refresh Succesful");
+    setSessionCookies(res, payload.userId);
+    return sendJson(res, 200, { message: "Token refreshed" });
+  } catch (error) {
+    console.error("REFRESH TOKEN CONTROLLER ERROR -", error);
+    return sendError(
+      res,
+      error.statusCode ?? 500,
+      error.statusCode ? error.message : "Internal Server Error",
+    );
+  }
 };
 
 export const logoutUser = async (_req, res) => {

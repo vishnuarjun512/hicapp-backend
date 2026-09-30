@@ -109,7 +109,7 @@ export const getMessagesService = async (
         id: row.sender.id,
         name: row.sender.name,
         handle: row.sender.handle,
-        profilePic: row.sender.profile_pic_url,
+        profile_pic_url: row.sender.profile_pic_url,
       },
 
       content: row.content,

@@ -1,5 +1,6 @@
 import {
   createConversation,
+  deleteConversation,
   getConversations,
 } from "../controller/conversation.controller.js";
 import {
@@ -33,6 +34,12 @@ export const conversationRoutes = (req, res) => {
 
   if (req.method == "GET" && pathname === "/api/conversation") {
     getConversations(req, res);
+    return true;
+  }
+
+  if (req.method == "DELETE" && req.url.startsWith("/api/conversation")) {
+    const conversationId = req.url.split("/").pop();
+    deleteConversation(req, res, conversationId);
     return true;
   }
 

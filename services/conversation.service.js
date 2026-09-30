@@ -88,6 +88,17 @@ export const createConversationService = async (userId, otherUserId) => {
   }
 };
 
+export const deleteConversationService = async (client, conversationId) => {
+  const query = `
+      DELETE
+      FROM conversation
+      WHERE id = $1
+      RETURNING id
+    `;
+  const result = await client.query(query, [conversationId]);
+  return result.rows[0];
+};
+
 export const getConversationsService = async (userId) => {
   try {
     const query = `

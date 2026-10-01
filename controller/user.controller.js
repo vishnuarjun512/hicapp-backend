@@ -10,6 +10,7 @@ import {
   getSuggestedUsersService,
   getFollowService,
   getFollowRequestService,
+  getAllFollowRequestByUserIDService,
 } from "../services/follow.service.js";
 import {
   getFeedPostsService,
@@ -176,6 +177,7 @@ export const getHomePageData = async (req, res) => {
     const posts = await getFeedPostsService(user.id);
     const conversations = await getConversationsService(user.id);
     const notifications = await getNotificationByRecipentID(user.id);
+    const followRequests = await getAllFollowRequestByUserIDService(userId);
 
     res.statusCode = 200;
     res.end(
@@ -186,6 +188,7 @@ export const getHomePageData = async (req, res) => {
         conversations,
         suggested,
         notifications,
+        followRequests,
       }),
     );
   } catch (error) {

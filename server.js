@@ -10,6 +10,8 @@ import { authRoutes } from "./routes/auth.route.js";
 import { likeRoutes } from "./routes/like.route.js";
 import { setupWebSocket } from "./websocket.js";
 import { commentRoutes } from "./routes/comment.route.js";
+import { searchRoutes } from "./routes/search.route.js";
+
 dotenv.config();
 const PORT = process.env.PORT;
 
@@ -63,6 +65,10 @@ const server = http.createServer((req, res) => {
 
   const commentRoutesHandled = commentRoutes(req, res);
   if (commentRoutesHandled) {
+    return;
+  }
+  const searchRoutesHandled = searchRoutes(req, res);
+  if (searchRoutesHandled) {
     return;
   }
 
